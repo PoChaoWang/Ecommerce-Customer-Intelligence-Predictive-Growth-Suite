@@ -1,0 +1,6 @@
+numpy<2
+pandas
+scikit-learn
+nltk
+shap<0.46
+xgboost
