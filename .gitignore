@@ -1,0 +1,24 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# macOS
+.DS_Store
+Thumbs.db
+
+# ipynb
+ipynb/
+
+# memo
+memo/
+
+# data
+data/*.csv
+schema/*.csv
+schema/*.json
+
+.vscode/
+.idea/
