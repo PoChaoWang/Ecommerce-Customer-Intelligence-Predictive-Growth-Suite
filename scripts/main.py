@@ -5,6 +5,7 @@ import phase1_rfm_sentiment as p1
 import phase2_behavior_strategy as p2
 import phase3_ltv_model as p3
 import phase4_cohort_analysis as p4
+import phase5_business_recommendation as p5
 
 # Suppress warnings
 warnings.filterwarnings("ignore")
@@ -98,6 +99,10 @@ def main():
     cohort_retention.to_csv("schema/Cohort_Retention.csv")
     cohort_revenue.to_csv("schema/Cohort_Revenue.csv")
     product_affinity.to_csv("schema/Product_Affinity.csv", index=False)
+
+    # 6. Business Recommendation Engine
+    print("6. Exporting Business Recommendations...")
+    p5.generate_business_recommendations("schema", "schema")
 
     print("\nWorkflow completed successfully. All artifacts saved in schema/ directory.")
 
