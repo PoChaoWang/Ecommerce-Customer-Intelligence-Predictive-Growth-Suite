@@ -18,8 +18,6 @@ prompt/
 
 # data
 data/*.csv
-schema/*.csv
-schema/*.json
 
 .vscode/
 .idea/

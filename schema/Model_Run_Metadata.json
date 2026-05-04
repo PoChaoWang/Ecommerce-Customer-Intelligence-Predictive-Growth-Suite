@@ -1,0 +1,16 @@
+{
+    "run_timestamp": "2026-05-03 22:08:08",
+    "model_type": "RandomForestRegressor",
+    "performance_metrics": {
+        "rmse": 253.23,
+        "mae": 162.72
+    },
+    "feature_importance": {
+        "recency": 0.3773,
+        "frequency": 0.0743,
+        "total_views": 0.1229,
+        "total_cart_adds": 0.0383,
+        "compound_score": 0.3873
+    },
+    "retrain_triggered": false
+}
