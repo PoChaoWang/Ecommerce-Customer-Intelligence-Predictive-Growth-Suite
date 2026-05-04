@@ -1,101 +1,101 @@
 user_id,recommended_action,priority_score,estimated_revenue,segment,reason
-U006093,Retention Campaign (Discount + EDM),527.5857022108836,52.77054862345153,一般潛力客,High churn risk and high LTV customer
-U005702,Retention Campaign (Discount + EDM),419.1908160978915,42.01218405706362,VVIP 忠誠高價值客,High churn risk and high LTV customer
-U008080,Retention Campaign (Discount + EDM),416.14338871552025,41.71281990370685,一般潛力客,High churn risk and high LTV customer
-U003957,Retention Campaign (Discount + EDM),356.64237890003136,35.95054540681982,VVIP 忠誠高價值客,High churn risk and high LTV customer
-U005146,Retention Campaign (Discount + EDM),356.64237890003136,35.95054540681982,VVIP 忠誠高價值客,High churn risk and high LTV customer
-U003411,Retention Campaign (Discount + EDM),345.40777620799844,34.88810795258201,VVIP 忠誠高價值客,High churn risk and high LTV customer
-U003066,Retention Campaign (Discount + EDM),331.56628734912607,33.59517164889163,即將流失的回購客,High churn risk and high LTV customer
-U006864,Retention Campaign (Discount + EDM),329.903063562053,33.44113272538497,VVIP 忠誠高價值客,High churn risk and high LTV customer
-U005218,Retention Campaign (Discount + EDM),325.9475791090079,33.07602232435867,沉睡的高價值客,High churn risk and high LTV customer
-U001057,Retention Campaign (Discount + EDM),324.75224146801673,32.9660347061542,即將流失的回購客,High churn risk and high LTV customer
-U002814,Retention Campaign (Discount + EDM),323.53700871505464,32.85438567579771,一般潛力客,High churn risk and high LTV customer
-U000675,Retention Campaign (Discount + EDM),321.23525996654394,32.643388626673605,一般潛力客,High churn risk and high LTV customer
-U000136,Retention Campaign (Discount + EDM),317.6718440271266,32.31799321029046,沉睡的高價值客,High churn risk and high LTV customer
-U005109,Retention Campaign (Discount + EDM),316.12002889399463,32.17677714173979,一般潛力客,High churn risk and high LTV customer
-U007858,Retention Campaign (Discount + EDM),314.88901684068793,32.064969598829784,一般潛力客,High churn risk and high LTV customer
-U007731,Retention Campaign (Discount + EDM),313.9884414737986,31.983296218915257,沉睡的高價值客,High churn risk and high LTV customer
-U006730,Retention Campaign (Discount + EDM),309.2970497008553,31.559535296759282,一般潛力客,High churn risk and high LTV customer
-U002001,Retention Campaign (Discount + EDM),308.3995960342037,31.478802494528352,沉睡的高價值客,High churn risk and high LTV customer
-U007949,Retention Campaign (Discount + EDM),307.9111918873294,31.434912381736197,沉睡的高價值客,High churn risk and high LTV customer
-U006972,Retention Campaign (Discount + EDM),306.7691624135014,31.332410908191566,VVIP 忠誠高價值客,High churn risk and high LTV customer
-U003279,Retention Campaign (Discount + EDM),306.1306925062245,31.275183376806368,沉睡的高價值客,High churn risk and high LTV customer
-U000318,Retention Campaign (Discount + EDM),304.43558765325145,31.12351969321536,一般潛力客,High churn risk and high LTV customer
-U004377,Retention Campaign (Discount + EDM),303.4121426232284,31.032143859684908,一般潛力客,High churn risk and high LTV customer
-U005148,Retention Campaign (Discount + EDM),300.8695704747582,30.805775438998765,沉睡的高價值客,High churn risk and high LTV customer
-U002657,Retention Campaign (Discount + EDM),300.36546202064767,30.76100341142414,VVIP 忠誠高價值客,High churn risk and high LTV customer
-U007430,Retention Campaign (Discount + EDM),297.3956199431367,30.497984977090443,一般潛力客,High churn risk and high LTV customer
-U006203,Retention Campaign (Discount + EDM),295.7394316281798,30.351868658560456,即將流失的回購客,High churn risk and high LTV customer
-U006026,Retention Campaign (Discount + EDM),294.6097313718611,30.252434987289735,沉睡的高價值客,High churn risk and high LTV customer
-U000835,Retention Campaign (Discount + EDM),291.60821869796337,29.989180759544077,一般潛力客,High churn risk and high LTV customer
-U009531,Retention Campaign (Discount + EDM),291.3009000958684,29.96230389724789,即將流失的回購客,High churn risk and high LTV customer
-U003529,Retention Campaign (Discount + EDM),290.1795428765393,29.8643572117775,一般潛力客,High churn risk and high LTV customer
-U000301,Retention Campaign (Discount + EDM),289.4400395306113,29.799870061572406,一般潛力客,High churn risk and high LTV customer
-U000989,Retention Campaign (Discount + EDM),287.6061575017195,29.640315407764447,即將流失的回購客,High churn risk and high LTV customer
-U009643,Retention Campaign (Discount + EDM),287.6061575017195,29.640315407764447,沉睡的高價值客,High churn risk and high LTV customer
-U006668,Retention Campaign (Discount + EDM),286.56420097270603,29.549895280184764,沉睡的高價值客,High churn risk and high LTV customer
-U004128,Retention Campaign (Discount + EDM),285.6935256251506,29.474469783277033,一般潛力客,High churn risk and high LTV customer
-U009334,Retention Campaign (Discount + EDM),282.10643290628235,29.16499505319497,即將流失的回購客,High churn risk and high LTV customer
-U000112,Retention Campaign (Discount + EDM),281.430766957349,29.106933218017158,一般潛力客,High churn risk and high LTV customer
-U009810,Retention Campaign (Discount + EDM),280.9060805881562,29.06189637992064,沉睡的高價值客,High churn risk and high LTV customer
-U009018,Retention Campaign (Discount + EDM),280.6710658974483,29.04173818706848,沉睡的高價值客,High churn risk and high LTV customer
-U007957,Retention Campaign (Discount + EDM),278.5394089140751,28.859307665551526,即將流失的回購客,High churn risk and high LTV customer
-U003216,Retention Campaign (Discount + EDM),278.2811005560204,28.83725168614825,沉睡的高價值客,High churn risk and high LTV customer
-U002620,Retention Campaign (Discount + EDM),277.46113597589454,28.767310600490134,沉睡的高價值客,High churn risk and high LTV customer
-U001762,Retention Campaign (Discount + EDM),275.6854341857963,28.616227413795936,一般潛力客,High churn risk and high LTV customer
-U002326,Retention Campaign (Discount + EDM),275.0978148869354,28.56634565222621,一般潛力客,High churn risk and high LTV customer
-U007070,Retention Campaign (Discount + EDM),273.1559395107759,28.40191318888953,近期新客,High churn risk and high LTV customer
-U009195,Retention Campaign (Discount + EDM),273.1559395107759,28.40191318888953,一般潛力客,High churn risk and high LTV customer
-U006349,Retention Campaign (Discount + EDM),272.3125644809445,28.330695155125177,一般潛力客,High churn risk and high LTV customer
-U004783,Retention Campaign (Discount + EDM),269.7826314004491,28.117775995835377,即將流失的回購客,High churn risk and high LTV customer
-U005691,Retention Campaign (Discount + EDM),268.4714140814675,28.00785036770255,一般潛力客,High churn risk and high LTV customer
-U001046,Retention Campaign (Discount + EDM),263.87732378081756,27.62502240139134,VVIP 忠誠高價值客,High churn risk and high LTV customer
-U007791,Retention Campaign (Discount + EDM),263.82781441105567,27.620916497424208,一般潛力客,High churn risk and high LTV customer
-U003794,Retention Campaign (Discount + EDM),263.588234993309,27.601053701725633,一般潛力客,High churn risk and high LTV customer
-U007161,Retention Campaign (Discount + EDM),261.13334414870747,27.398097562511943,近期新客,High churn risk and high LTV customer
-U002822,Retention Campaign (Discount + EDM),259.12283746011934,27.23265844324364,一般潛力客,High churn risk and high LTV customer
-U002612,Retention Campaign (Discount + EDM),258.50528707839186,27.18198296558793,一般潛力客,High churn risk and high LTV customer
-U007556,Retention Campaign (Discount + EDM),258.23961368501676,27.16020253731408,一般潛力客,High churn risk and high LTV customer
-U002198,Retention Campaign (Discount + EDM),258.1443025455588,27.152391738807424,一般潛力客,High churn risk and high LTV customer
-U005424,Retention Campaign (Discount + EDM),257.29076234358587,27.082514241408166,一般潛力客,High churn risk and high LTV customer
-U001417,Retention Campaign (Discount + EDM),256.6315546965855,27.028633294332327,一般潛力客,High churn risk and high LTV customer
-U009746,Retention Campaign (Discount + EDM),256.49207504872413,27.017242517805666,一般潛力客,High churn risk and high LTV customer
-U001746,Retention Campaign (Discount + EDM),256.3563743507687,27.006163613807423,一般潛力客,High churn risk and high LTV customer
-U006914,Retention Campaign (Discount + EDM),256.3563743507687,27.006163613807423,一般潛力客,High churn risk and high LTV customer
-U007135,Retention Campaign (Discount + EDM),256.3563743507687,27.006163613807423,一般潛力客,High churn risk and high LTV customer
-U000452,Retention Campaign (Discount + EDM),254.7149554210204,26.87240938669499,一般潛力客,High churn risk and high LTV customer
-U004575,Retention Campaign (Discount + EDM),253.48001967821497,26.772088854954514,VVIP 忠誠高價值客,High churn risk and high LTV customer
-U007518,Retention Campaign (Discount + EDM),252.5624527116014,26.697722801741346,VVIP 忠誠高價值客,High churn risk and high LTV customer
-U003655,Retention Campaign (Discount + EDM),251.30986441485356,26.596442391488512,一般潛力客,High churn risk and high LTV customer
-U005689,Retention Campaign (Discount + EDM),251.30986441485356,26.596442391488512,沉睡的高價值客,High churn risk and high LTV customer
-U006829,Retention Campaign (Discount + EDM),251.30986441485356,26.596442391488512,一般潛力客,High churn risk and high LTV customer
-U009967,Retention Campaign (Discount + EDM),250.67857013197985,26.54550211351456,一般潛力客,High churn risk and high LTV customer
-U006769,Retention Campaign (Discount + EDM),249.87444232817063,26.480716767117144,一般潛力客,High churn risk and high LTV customer
-U004222,Retention Campaign (Discount + EDM),249.49535151216662,26.450214266488516,一般潛力客,High churn risk and high LTV customer
-U003799,Retention Campaign (Discount + EDM),249.43325155243235,26.44521996593278,沉睡的高價值客,High churn risk and high LTV customer
-U004883,Retention Campaign (Discount + EDM),249.2032618460264,26.426729261972714,一般潛力客,High churn risk and high LTV customer
-U000205,Retention Campaign (Discount + EDM),248.94103223941278,26.40565785203632,一般潛力客,High churn risk and high LTV customer
-U008647,Retention Campaign (Discount + EDM),248.5894551596943,26.377425862645005,沉睡的高價值客,High churn risk and high LTV customer
-U002595,Retention Campaign (Discount + EDM),248.4771649292896,26.368413411958144,一般潛力客,High churn risk and high LTV customer
-U009086,Retention Campaign (Discount + EDM),246.8304320904357,26.236500014764637,沉睡的高價值客,High churn risk and high LTV customer
-U009351,Retention Campaign (Discount + EDM),246.76411714412598,26.231197737645005,一般潛力客,High churn risk and high LTV customer
-U000269,Retention Campaign (Discount + EDM),246.6565118267097,26.222595688007647,一般潛力客,High churn risk and high LTV customer
-U005877,Retention Campaign (Discount + EDM),246.23602270870703,26.18900092999604,即將流失的回購客,High churn risk and high LTV customer
-U000711,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,近期新客,High churn risk and high LTV customer
-U001630,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,近期新客,High churn risk and high LTV customer
-U004000,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,近期新客,High churn risk and high LTV customer
-U004929,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,近期新客,High churn risk and high LTV customer
-U006008,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,近期新客,High churn risk and high LTV customer
-U006270,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,近期新客,High churn risk and high LTV customer
-U007714,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,近期新客,High churn risk and high LTV customer
-U007772,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,近期新客,High churn risk and high LTV customer
-U007868,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,近期新客,High churn risk and high LTV customer
-U009436,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,近期新客,High churn risk and high LTV customer
-U007031,Retention Campaign (Discount + EDM),243.88239083716303,26.001530537453693,一般潛力客,High churn risk and high LTV customer
-U002711,Retention Campaign (Discount + EDM),243.79875120721994,25.994886353150477,沉睡的高價值客,High churn risk and high LTV customer
-U009312,Retention Campaign (Discount + EDM),242.85712017799887,25.920169261135598,近期新客,High churn risk and high LTV customer
-U009260,Retention Campaign (Discount + EDM),242.82882692610113,25.917926630149097,近期新客,High churn risk and high LTV customer
-U007514,Retention Campaign (Discount + EDM),242.6957451833282,25.907379940363445,沉睡的高價值客,High churn risk and high LTV customer
-U006895,Retention Campaign (Discount + EDM),242.43018590152877,25.88634369171216,一般潛力客,High churn risk and high LTV customer
-U004184,Retention Campaign (Discount + EDM),241.8922400986305,25.843768121811515,一般潛力客,High churn risk and high LTV customer
-U002167,Retention Campaign (Discount + EDM),241.51663011856667,25.814070526580053,一般潛力客,High churn risk and high LTV customer
+U006093,Retention Campaign (Discount + EDM),527.5857022108836,52.77054862345153,General Potential Customer,High churn risk and high LTV customer
+U005702,Retention Campaign (Discount + EDM),419.1908160978915,42.01218405706362,VVIP Loyal High-Value Customer,High churn risk and high LTV customer
+U008080,Retention Campaign (Discount + EDM),416.14338871552025,41.71281990370685,General Potential Customer,High churn risk and high LTV customer
+U003957,Retention Campaign (Discount + EDM),356.64237890003136,35.95054540681982,VVIP Loyal High-Value Customer,High churn risk and high LTV customer
+U005146,Retention Campaign (Discount + EDM),356.64237890003136,35.95054540681982,VVIP Loyal High-Value Customer,High churn risk and high LTV customer
+U003411,Retention Campaign (Discount + EDM),345.40777620799844,34.88810795258201,VVIP Loyal High-Value Customer,High churn risk and high LTV customer
+U003066,Retention Campaign (Discount + EDM),331.56628734912607,33.59517164889163,At-Risk Repeat Customer,High churn risk and high LTV customer
+U006864,Retention Campaign (Discount + EDM),329.903063562053,33.44113272538497,VVIP Loyal High-Value Customer,High churn risk and high LTV customer
+U005218,Retention Campaign (Discount + EDM),325.9475791090079,33.07602232435867,Dormant High-Value Customer,High churn risk and high LTV customer
+U001057,Retention Campaign (Discount + EDM),324.75224146801673,32.9660347061542,At-Risk Repeat Customer,High churn risk and high LTV customer
+U002814,Retention Campaign (Discount + EDM),323.53700871505464,32.85438567579771,General Potential Customer,High churn risk and high LTV customer
+U000675,Retention Campaign (Discount + EDM),321.23525996654394,32.643388626673605,General Potential Customer,High churn risk and high LTV customer
+U000136,Retention Campaign (Discount + EDM),317.6718440271266,32.31799321029046,Dormant High-Value Customer,High churn risk and high LTV customer
+U005109,Retention Campaign (Discount + EDM),316.12002889399463,32.17677714173979,General Potential Customer,High churn risk and high LTV customer
+U007858,Retention Campaign (Discount + EDM),314.88901684068793,32.064969598829784,General Potential Customer,High churn risk and high LTV customer
+U007731,Retention Campaign (Discount + EDM),313.9884414737986,31.983296218915257,Dormant High-Value Customer,High churn risk and high LTV customer
+U006730,Retention Campaign (Discount + EDM),309.2970497008553,31.559535296759282,General Potential Customer,High churn risk and high LTV customer
+U002001,Retention Campaign (Discount + EDM),308.3995960342037,31.478802494528352,Dormant High-Value Customer,High churn risk and high LTV customer
+U007949,Retention Campaign (Discount + EDM),307.9111918873294,31.434912381736197,Dormant High-Value Customer,High churn risk and high LTV customer
+U006972,Retention Campaign (Discount + EDM),306.7691624135014,31.332410908191566,VVIP Loyal High-Value Customer,High churn risk and high LTV customer
+U003279,Retention Campaign (Discount + EDM),306.1306925062245,31.275183376806368,Dormant High-Value Customer,High churn risk and high LTV customer
+U000318,Retention Campaign (Discount + EDM),304.43558765325145,31.12351969321536,General Potential Customer,High churn risk and high LTV customer
+U004377,Retention Campaign (Discount + EDM),303.4121426232284,31.032143859684908,General Potential Customer,High churn risk and high LTV customer
+U005148,Retention Campaign (Discount + EDM),300.8695704747582,30.805775438998765,Dormant High-Value Customer,High churn risk and high LTV customer
+U002657,Retention Campaign (Discount + EDM),300.36546202064767,30.76100341142414,VVIP Loyal High-Value Customer,High churn risk and high LTV customer
+U007430,Retention Campaign (Discount + EDM),297.3956199431367,30.497984977090443,General Potential Customer,High churn risk and high LTV customer
+U006203,Retention Campaign (Discount + EDM),295.7394316281798,30.351868658560456,At-Risk Repeat Customer,High churn risk and high LTV customer
+U006026,Retention Campaign (Discount + EDM),294.6097313718611,30.252434987289735,Dormant High-Value Customer,High churn risk and high LTV customer
+U000835,Retention Campaign (Discount + EDM),291.60821869796337,29.989180759544077,General Potential Customer,High churn risk and high LTV customer
+U009531,Retention Campaign (Discount + EDM),291.3009000958684,29.96230389724789,At-Risk Repeat Customer,High churn risk and high LTV customer
+U003529,Retention Campaign (Discount + EDM),290.1795428765393,29.8643572117775,General Potential Customer,High churn risk and high LTV customer
+U000301,Retention Campaign (Discount + EDM),289.4400395306113,29.799870061572406,General Potential Customer,High churn risk and high LTV customer
+U000989,Retention Campaign (Discount + EDM),287.6061575017195,29.640315407764447,At-Risk Repeat Customer,High churn risk and high LTV customer
+U009643,Retention Campaign (Discount + EDM),287.6061575017195,29.640315407764447,Dormant High-Value Customer,High churn risk and high LTV customer
+U006668,Retention Campaign (Discount + EDM),286.56420097270603,29.549895280184764,Dormant High-Value Customer,High churn risk and high LTV customer
+U004128,Retention Campaign (Discount + EDM),285.6935256251506,29.474469783277033,General Potential Customer,High churn risk and high LTV customer
+U009334,Retention Campaign (Discount + EDM),282.10643290628235,29.16499505319497,At-Risk Repeat Customer,High churn risk and high LTV customer
+U000112,Retention Campaign (Discount + EDM),281.430766957349,29.106933218017158,General Potential Customer,High churn risk and high LTV customer
+U009810,Retention Campaign (Discount + EDM),280.9060805881562,29.06189637992064,Dormant High-Value Customer,High churn risk and high LTV customer
+U009018,Retention Campaign (Discount + EDM),280.6710658974483,29.04173818706848,Dormant High-Value Customer,High churn risk and high LTV customer
+U007957,Retention Campaign (Discount + EDM),278.5394089140751,28.859307665551526,At-Risk Repeat Customer,High churn risk and high LTV customer
+U003216,Retention Campaign (Discount + EDM),278.2811005560204,28.83725168614825,Dormant High-Value Customer,High churn risk and high LTV customer
+U002620,Retention Campaign (Discount + EDM),277.46113597589454,28.767310600490134,Dormant High-Value Customer,High churn risk and high LTV customer
+U001762,Retention Campaign (Discount + EDM),275.6854341857963,28.616227413795936,General Potential Customer,High churn risk and high LTV customer
+U002326,Retention Campaign (Discount + EDM),275.0978148869354,28.56634565222621,General Potential Customer,High churn risk and high LTV customer
+U007070,Retention Campaign (Discount + EDM),273.1559395107759,28.40191318888953,Recent New Customer,High churn risk and high LTV customer
+U009195,Retention Campaign (Discount + EDM),273.1559395107759,28.40191318888953,General Potential Customer,High churn risk and high LTV customer
+U006349,Retention Campaign (Discount + EDM),272.3125644809445,28.330695155125177,General Potential Customer,High churn risk and high LTV customer
+U004783,Retention Campaign (Discount + EDM),269.7826314004491,28.117775995835377,At-Risk Repeat Customer,High churn risk and high LTV customer
+U005691,Retention Campaign (Discount + EDM),268.4714140814675,28.00785036770255,General Potential Customer,High churn risk and high LTV customer
+U001046,Retention Campaign (Discount + EDM),263.87732378081756,27.62502240139134,VVIP Loyal High-Value Customer,High churn risk and high LTV customer
+U007791,Retention Campaign (Discount + EDM),263.82781441105567,27.620916497424208,General Potential Customer,High churn risk and high LTV customer
+U003794,Retention Campaign (Discount + EDM),263.588234993309,27.601053701725633,General Potential Customer,High churn risk and high LTV customer
+U007161,Retention Campaign (Discount + EDM),261.13334414870747,27.398097562511943,Recent New Customer,High churn risk and high LTV customer
+U002822,Retention Campaign (Discount + EDM),259.12283746011934,27.23265844324364,General Potential Customer,High churn risk and high LTV customer
+U002612,Retention Campaign (Discount + EDM),258.50528707839186,27.18198296558793,General Potential Customer,High churn risk and high LTV customer
+U007556,Retention Campaign (Discount + EDM),258.23961368501676,27.16020253731408,General Potential Customer,High churn risk and high LTV customer
+U002198,Retention Campaign (Discount + EDM),258.1443025455588,27.152391738807424,General Potential Customer,High churn risk and high LTV customer
+U005424,Retention Campaign (Discount + EDM),257.29076234358587,27.082514241408166,General Potential Customer,High churn risk and high LTV customer
+U001417,Retention Campaign (Discount + EDM),256.6315546965855,27.028633294332327,General Potential Customer,High churn risk and high LTV customer
+U009746,Retention Campaign (Discount + EDM),256.49207504872413,27.017242517805666,General Potential Customer,High churn risk and high LTV customer
+U001746,Retention Campaign (Discount + EDM),256.3563743507687,27.006163613807423,General Potential Customer,High churn risk and high LTV customer
+U006914,Retention Campaign (Discount + EDM),256.3563743507687,27.006163613807423,General Potential Customer,High churn risk and high LTV customer
+U007135,Retention Campaign (Discount + EDM),256.3563743507687,27.006163613807423,General Potential Customer,High churn risk and high LTV customer
+U000452,Retention Campaign (Discount + EDM),254.7149554210204,26.87240938669499,General Potential Customer,High churn risk and high LTV customer
+U004575,Retention Campaign (Discount + EDM),253.48001967821497,26.772088854954514,VVIP Loyal High-Value Customer,High churn risk and high LTV customer
+U007518,Retention Campaign (Discount + EDM),252.5624527116014,26.697722801741346,VVIP Loyal High-Value Customer,High churn risk and high LTV customer
+U003655,Retention Campaign (Discount + EDM),251.30986441485356,26.596442391488512,General Potential Customer,High churn risk and high LTV customer
+U005689,Retention Campaign (Discount + EDM),251.30986441485356,26.596442391488512,Dormant High-Value Customer,High churn risk and high LTV customer
+U006829,Retention Campaign (Discount + EDM),251.30986441485356,26.596442391488512,General Potential Customer,High churn risk and high LTV customer
+U009967,Retention Campaign (Discount + EDM),250.67857013197985,26.54550211351456,General Potential Customer,High churn risk and high LTV customer
+U006769,Retention Campaign (Discount + EDM),249.87444232817063,26.480716767117144,General Potential Customer,High churn risk and high LTV customer
+U004222,Retention Campaign (Discount + EDM),249.49535151216662,26.450214266488516,General Potential Customer,High churn risk and high LTV customer
+U003799,Retention Campaign (Discount + EDM),249.43325155243235,26.44521996593278,Dormant High-Value Customer,High churn risk and high LTV customer
+U004883,Retention Campaign (Discount + EDM),249.2032618460264,26.426729261972714,General Potential Customer,High churn risk and high LTV customer
+U000205,Retention Campaign (Discount + EDM),248.94103223941278,26.40565785203632,General Potential Customer,High churn risk and high LTV customer
+U008647,Retention Campaign (Discount + EDM),248.5894551596943,26.377425862645005,Dormant High-Value Customer,High churn risk and high LTV customer
+U002595,Retention Campaign (Discount + EDM),248.4771649292896,26.368413411958144,General Potential Customer,High churn risk and high LTV customer
+U009086,Retention Campaign (Discount + EDM),246.8304320904357,26.236500014764637,Dormant High-Value Customer,High churn risk and high LTV customer
+U009351,Retention Campaign (Discount + EDM),246.76411714412598,26.231197737645005,General Potential Customer,High churn risk and high LTV customer
+U000269,Retention Campaign (Discount + EDM),246.6565118267097,26.222595688007647,General Potential Customer,High churn risk and high LTV customer
+U005877,Retention Campaign (Discount + EDM),246.23602270870703,26.18900092999604,At-Risk Repeat Customer,High churn risk and high LTV customer
+U000711,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,Recent New Customer,High churn risk and high LTV customer
+U001630,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,Recent New Customer,High churn risk and high LTV customer
+U004000,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,Recent New Customer,High churn risk and high LTV customer
+U004929,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,Recent New Customer,High churn risk and high LTV customer
+U006008,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,Recent New Customer,High churn risk and high LTV customer
+U006270,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,Recent New Customer,High churn risk and high LTV customer
+U007714,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,Recent New Customer,High churn risk and high LTV customer
+U007772,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,Recent New Customer,High churn risk and high LTV customer
+U007868,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,Recent New Customer,High churn risk and high LTV customer
+U009436,Retention Campaign (Discount + EDM),245.52492976510447,26.132259022222872,Recent New Customer,High churn risk and high LTV customer
+U007031,Retention Campaign (Discount + EDM),243.88239083716303,26.001530537453693,General Potential Customer,High churn risk and high LTV customer
+U002711,Retention Campaign (Discount + EDM),243.79875120721994,25.994886353150477,Dormant High-Value Customer,High churn risk and high LTV customer
+U009312,Retention Campaign (Discount + EDM),242.85712017799887,25.920169261135598,Recent New Customer,High churn risk and high LTV customer
+U009260,Retention Campaign (Discount + EDM),242.82882692610113,25.917926630149097,Recent New Customer,High churn risk and high LTV customer
+U007514,Retention Campaign (Discount + EDM),242.6957451833282,25.907379940363445,Dormant High-Value Customer,High churn risk and high LTV customer
+U006895,Retention Campaign (Discount + EDM),242.43018590152877,25.88634369171216,General Potential Customer,High churn risk and high LTV customer
+U004184,Retention Campaign (Discount + EDM),241.8922400986305,25.843768121811515,General Potential Customer,High churn risk and high LTV customer
+U002167,Retention Campaign (Discount + EDM),241.51663011856667,25.814070526580053,General Potential Customer,High churn risk and high LTV customer

@@ -2,6 +2,8 @@ import pandas as pd
 from collections import Counter
 import re
 
+from phase1_rfm_sentiment import CUSTOMER_SEGMENTS
+
 
 def aggregate_events(events):
     """Phase 2.1: Aggregate behavior data into user features."""
@@ -101,9 +103,15 @@ def apply_automation_logic(df):
     """Phase 2.3: Define automation strategy triggers."""
 
     def trigger_logic(row):
-        if row["segment"] == "VVIP 忠誠高價值客" and row["risk_flag"] == 1:
+        if (
+            row["segment"] == CUSTOMER_SEGMENTS["vvip_loyal_high_value"]
+            and row["risk_flag"] == 1
+        ):
             return "Trigger: VIP Concierge Outreach"
-        elif row["segment"] == "近期新客" and row["total_cart_adds"] > 5:
+        elif (
+            row["segment"] == CUSTOMER_SEGMENTS["recent_new_customer"]
+            and row["total_cart_adds"] > 5
+        ):
             return "Trigger: 10% Welcome Discount"
         return "Keep Current Strategy"
 
@@ -117,7 +125,7 @@ def generate_lookalike_seed(df):
     """
     threshold = df["predicted_profit_90_days"].quantile(0.8)
     lookalike_df = df[
-        (df["segment"] == "VVIP 忠誠高價值客") | 
+        (df["segment"] == CUSTOMER_SEGMENTS["vvip_loyal_high_value"]) |
         (df["predicted_profit_90_days"] >= threshold)
     ]
     
@@ -184,7 +192,9 @@ def generate_sleepy_product_health_report(customer_df, reviews_processed, produc
     """
     Requirement 5: Cross-analyze sleepy high-value customers with product health.
     """
-    sleepy_users = customer_df[customer_df["segment"] == "沉睡的高價值客"]["user_id"]
+    sleepy_users = customer_df[
+        customer_df["segment"] == CUSTOMER_SEGMENTS["dormant_high_value"]
+    ]["user_id"]
     sleepy_product_ids = order_items[order_items["user_id"].isin(sleepy_users)]["product_id"].unique()
     full_health_report = extract_pain_points(reviews_processed, products)
     
@@ -192,8 +202,8 @@ def generate_sleepy_product_health_report(customer_df, reviews_processed, produc
     
     def define_action(count):
         if count > 0:
-            return "產品團隊檢討"
-        return "考慮重新曝光或推薦給沉睡客"
+            return "Product Team Review"
+        return "Consider Re-exposure or Recommendation to Dormant Customers"
     
     sleepy_health["action_required"] = sleepy_health["total_risk_reviews"].apply(define_action)
     
@@ -236,18 +246,22 @@ def generate_brand_health_monitor(reviews_processed, products):
         s30, r30 = row["avg_sentiment_score_30d"], row["risk_review_ratio_30d"]
         
         if s7 < -0.2 and r7 > 0.4:
-            row["alert_level"] = "🔴 高風險：立即介入"
+            row["alert_level"] = "High Risk: Immediate Intervention"
         elif s30 < -0.1 and r30 > 0.25:
-            row["alert_level"] = "🟡 中風險：持續觀察"
+            row["alert_level"] = "Medium Risk: Monitor Closely"
         else:
-            row["alert_level"] = "🟢 健康"
+            row["alert_level"] = "Healthy"
             
         stats.append(row)
         
     result_df = pd.DataFrame(stats)
     
     # Sorting
-    alert_priority = {"🔴 高風險：立即介入": 0, "🟡 中風險：持續觀察": 1, "🟢 健康": 2}
+    alert_priority = {
+        "High Risk: Immediate Intervention": 0,
+        "Medium Risk: Monitor Closely": 1,
+        "Healthy": 2,
+    }
     result_df["priority"] = result_df["alert_level"].map(alert_priority)
     
     result_df = result_df.sort_values(by=["priority", "avg_sentiment_score_7d"], ascending=[True, True])

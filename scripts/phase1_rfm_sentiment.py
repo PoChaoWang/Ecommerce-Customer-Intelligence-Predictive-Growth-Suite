@@ -4,6 +4,15 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import numpy as np
 
 
+CUSTOMER_SEGMENTS = {
+    "vvip_loyal_high_value": "VVIP Loyal High-Value Customer",
+    "dormant_high_value": "Dormant High-Value Customer",
+    "recent_new_customer": "Recent New Customer",
+    "at_risk_repeat_customer": "At-Risk Repeat Customer",
+    "general_potential_customer": "General Potential Customer",
+}
+
+
 def perform_rfm_analysis(orders):
     """Phase 1.1: Calculate Recency, Frequency, and Monetary metrics."""
     # Define reference date as the day after the latest order
@@ -96,15 +105,15 @@ def define_segments(rfm, user_sentiment):
     def segment_logic(row):
         r, f, m = row["recency_score"], row["frequency_score"], row["monetary_score"]
         if r >= 4 and f >= 4 and m >= 4:
-            return "VVIP 忠誠高價值客"
+            return CUSTOMER_SEGMENTS["vvip_loyal_high_value"]
         elif r <= 2 and m >= 4:
-            return "沉睡的高價值客"
+            return CUSTOMER_SEGMENTS["dormant_high_value"]
         elif r >= 4 and f == 1:
-            return "近期新客"
+            return CUSTOMER_SEGMENTS["recent_new_customer"]
         elif r <= 3 and f >= 3:
-            return "即將流失的回購客"
+            return CUSTOMER_SEGMENTS["at_risk_repeat_customer"]
         else:
-            return "一般潛力客"
+            return CUSTOMER_SEGMENTS["general_potential_customer"]
 
     df["segment"] = df.apply(segment_logic, axis=1)
     return df
@@ -112,7 +121,9 @@ def define_segments(rfm, user_sentiment):
 
 def get_sleepy_customer_preferences(customer_df, order_items, products):
     """Phase 1.4: Top 10 product categories for sleepy customers."""
-    sleepy_users = customer_df[customer_df["segment"] == "沉睡的高價值客"]["user_id"]
+    sleepy_users = customer_df[
+        customer_df["segment"] == CUSTOMER_SEGMENTS["dormant_high_value"]
+    ]["user_id"]
     sleepy_orders = order_items[order_items["user_id"].isin(sleepy_users)]
     sleepy_products = sleepy_orders.merge(products, on="product_id")
 
