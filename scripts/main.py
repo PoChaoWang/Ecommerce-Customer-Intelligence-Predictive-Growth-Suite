@@ -51,6 +51,7 @@ def main():
     print("Executing Phase 3: LTV Prediction & Performance Monitoring...")
     # build_predictive_model now internally calls check_and_retrain()
     c360_table, model_metadata, shap_explanations = p3.build_predictive_model(customer_df, orders)
+    model_validation_table = p3.build_model_validation_table(c360_table)
 
     # Phase 4: Actionable Lists & Advanced Analysis
     print("Executing Phase 4: Generating Marketing Lists & Advanced Analysis...")
@@ -85,8 +86,9 @@ def main():
     brand_health_monitor.to_csv("schema/Brand_Health_Monitor.csv", index=False)
 
     # 3. Model Insights (Note: JSON is handled by check_and_retrain inside Phase 3)
-    print("3. Exporting Model Insights (SHAP)...")
+    print("3. Exporting Model Insights (SHAP & Validation)...")
     shap_explanations.to_csv("schema/Model_Explanations_Table.csv", index=False)
+    model_validation_table.to_csv("schema/Model_Validation_Table.csv", index=False)
 
     # 4. Marketing Action Lists
     print("4. Exporting Actionable Marketing Lists...")
