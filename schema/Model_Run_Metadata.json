@@ -66,6 +66,23 @@
             "run_id": "20260505_165217",
             "run_timestamp": "2026-05-05 16:52:17",
             "retrain_triggered": false
+        },
+        {
+            "model_type": "RandomForestRegressor",
+            "performance_metrics": {
+                "rmse": 253.23,
+                "mae": 162.72
+            },
+            "feature_importance": {
+                "recency": 0.3773,
+                "frequency": 0.0743,
+                "total_views": 0.1229,
+                "total_cart_adds": 0.0383,
+                "compound_score": 0.3873
+            },
+            "run_id": "20260505_170125",
+            "run_timestamp": "2026-05-05 17:01:25",
+            "retrain_triggered": false
         }
     ]
 }

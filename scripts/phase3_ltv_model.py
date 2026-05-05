@@ -64,13 +64,29 @@ def check_and_retrain(current_metadata):
     return current_metadata
 
 
-def build_model_validation_table(c360_table):
+def _format_date(value):
+    """Return a YYYY-MM-DD date string for dashboard-facing CSV fields."""
+    return pd.to_datetime(value).strftime("%Y-%m-%d")
+
+
+def build_model_validation_table(
+    c360_table,
+    validation_run_date=None,
+    prediction_window_start=None,
+    prediction_window_end=None,
+):
     """
     Build a dashboard-ready model validation table for the 90-day LTV model.
 
     The validation target keeps customers with no prediction-period purchase by
     filling missing actual profit with 0. This avoids validating only on buyers.
     """
+    if prediction_window_start is None or prediction_window_end is None:
+        raise ValueError(
+            "prediction_window_start and prediction_window_end are required "
+            "for model validation output."
+        )
+
     required_columns = ["user_id", "segment", "predicted_profit_90_days", "actual_profit"]
     missing_columns = [col for col in required_columns if col not in c360_table.columns]
     if missing_columns:
@@ -80,6 +96,13 @@ def build_model_validation_table(c360_table):
         )
 
     validation_table = c360_table[required_columns].copy()
+    validation_table["validation_run_date"] = (
+        _format_date(validation_run_date)
+        if validation_run_date is not None
+        else datetime.now().strftime("%Y-%m-%d")
+    )
+    validation_table["prediction_window_start"] = _format_date(prediction_window_start)
+    validation_table["prediction_window_end"] = _format_date(prediction_window_end)
     validation_table["predicted_profit_90_days"] = pd.to_numeric(
         validation_table["predicted_profit_90_days"], errors="coerce"
     ).fillna(0)
@@ -126,6 +149,9 @@ def build_model_validation_table(c360_table):
     validation_table["top_30_flag"] = validation_table["prediction_decile"] <= 3
 
     output_columns = [
+        "validation_run_date",
+        "prediction_window_start",
+        "prediction_window_end",
         "user_id",
         "segment",
         "predicted_profit_90_days",
@@ -152,6 +178,11 @@ def build_predictive_model(df, orders):
     # 1. Define time windows
     latest_date = orders["order_date"].max()
     split_date = latest_date - pd.Timedelta(days=90)
+    validation_window_metadata = {
+        "validation_run_date": datetime.now().strftime("%Y-%m-%d"),
+        "prediction_window_start": split_date.strftime("%Y-%m-%d"),
+        "prediction_window_end": latest_date.strftime("%Y-%m-%d"),
+    }
     
     observation_orders = orders[orders["order_date"] < split_date]
     prediction_orders = orders[orders["order_date"] >= split_date]
@@ -241,4 +272,4 @@ def build_predictive_model(df, orders):
     # Requirement 8: Check and Retrain logic
     model_metadata = check_and_retrain(model_metadata)
 
-    return merged_df, model_metadata, shap_explanations
+    return merged_df, model_metadata, shap_explanations, validation_window_metadata

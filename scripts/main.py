@@ -50,8 +50,18 @@ def main():
     # Phase 3: LTV Modeling & Performance Monitoring
     print("Executing Phase 3: LTV Prediction & Performance Monitoring...")
     # build_predictive_model now internally calls check_and_retrain()
-    c360_table, model_metadata, shap_explanations = p3.build_predictive_model(customer_df, orders)
-    model_validation_table = p3.build_model_validation_table(c360_table)
+    (
+        c360_table,
+        model_metadata,
+        shap_explanations,
+        validation_window_metadata,
+    ) = p3.build_predictive_model(customer_df, orders)
+    model_validation_table = p3.build_model_validation_table(
+        c360_table,
+        validation_run_date=validation_window_metadata["validation_run_date"],
+        prediction_window_start=validation_window_metadata["prediction_window_start"],
+        prediction_window_end=validation_window_metadata["prediction_window_end"],
+    )
 
     # Phase 4: Actionable Lists & Advanced Analysis
     print("Executing Phase 4: Generating Marketing Lists & Advanced Analysis...")
