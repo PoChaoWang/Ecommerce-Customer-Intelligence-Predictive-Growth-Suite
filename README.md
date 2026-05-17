@@ -1,5 +1,8 @@
 # E-Commerce Business Decision System
 
+[English](README.md) | [繁體中文](README.zh-TW.md)
+
+
 This project is a business decision system built for e-commerce growth. Its goal is not only to generate analytical reports or prediction models, but to transform distributed customer, transaction, browsing, cart, review, and product data into prioritized action lists and decision recommendations that marketing, CRM, and product teams can use directly.
 
 It answers the operational questions teams face every day:
