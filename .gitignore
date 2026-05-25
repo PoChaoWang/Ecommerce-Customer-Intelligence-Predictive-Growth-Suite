@@ -24,3 +24,6 @@ schema/Model_Run_Metadata.json
 .idea/
 *copy.md
 
+.pycache/
+__pycache__/
+*.py[cod]
