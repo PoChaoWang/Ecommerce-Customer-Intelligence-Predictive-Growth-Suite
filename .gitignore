@@ -32,6 +32,7 @@ static/
 agents/
 .env
 scripts/archive
+archive
 
 # dbt
 ecommerce_dbt/logs/
