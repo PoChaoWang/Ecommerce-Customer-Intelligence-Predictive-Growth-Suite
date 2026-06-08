@@ -32,3 +32,10 @@ static/
 agents/
 .env
 scripts/achive
+
+# dbt
+ecommerce_dbt/logs/
+ecommerce_dbt/target/
+dbt.log
+query_log.sql
+logs/
