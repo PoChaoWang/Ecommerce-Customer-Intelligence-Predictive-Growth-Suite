@@ -1,0 +1,82 @@
+version: 2
+
+models:
+  - name: int_product_review_health
+    description: "Product-level health metrics including ratings and risk review counts."
+    columns:
+      - name: product_id
+        tests:
+          - not_null
+          - unique
+
+  - name: int_rfm_scores
+    description: "Calculates R, F, M values and scores using NTILE(5) and custom logic."
+    columns:
+      - name: user_id
+        description: "Unique identifier for the customer"
+        tests:
+          - not_null
+          - unique
+      - name: recency
+      - name: frequency
+      - name: monetary
+      - name: recency_score
+      - name: frequency_score
+      - name: monetary_score
+
+  - name: int_event_aggregates
+    description: "Pivots event types (views, cart adds) per user."
+    columns:
+      - name: user_id
+        description: "Unique identifier for the customer"
+        tests:
+          - not_null
+          - unique
+      - name: total_views
+      - name: total_cart_adds
+
+  - name: int_customer_segments
+    description: "Assigns customer segments based on RFM scores and sentiment."
+    columns:
+      - name: user_id
+        description: "Unique identifier for the customer"
+        tests:
+          - not_null
+          - unique
+      - name: segment
+
+  - name: int_cohort_base
+    description: "Assigns users to cohort months and calculates relative periods for retention."
+    columns:
+      - name: user_id
+        description: "Identifier for the customer"
+      - name: order_id
+      - name: cohort_month
+      - name: order_month
+      - name: period_number
+      - name: total_amount
+
+  - name: int_cart_abandonment_base
+    description: "Users who added items to cart but didn't complete a purchase recently."
+    columns:
+      - name: user_id
+        description: "Unique identifier for the customer"
+        tests:
+          - not_null
+          - unique
+      - name: abandoned_product_ids
+
+  - name: int_ltv_training_features
+    description: "Feature set for LTV predictive model training."
+    columns:
+      - name: user_id
+        description: "Unique identifier for the customer"
+        tests:
+          - not_null
+          - unique
+      - name: recency
+      - name: frequency
+      - name: total_views
+      - name: total_cart_adds
+      - name: compound_score
+      - name: actual_profit
