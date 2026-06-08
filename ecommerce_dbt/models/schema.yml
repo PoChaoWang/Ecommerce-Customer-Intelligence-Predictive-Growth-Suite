@@ -41,3 +41,11 @@ sources:
             tests:
               - not_null
               - unique
+      - name: int_product_pain_points
+        description: "Top 3 pain points (keywords) per product from Python script."
+        columns:
+          - name: product_id
+            data_type: STRING
+            tests:
+              - not_null
+              - unique
