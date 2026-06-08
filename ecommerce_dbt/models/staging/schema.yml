@@ -1,0 +1,174 @@
+version: 2
+
+models:
+  - name: stg_events
+    description: "Staging model for user behavior events."
+    columns:
+      - name: event_id
+        data_type: STRING
+        description: "Primary key"
+        tests:
+          - not_null
+          - unique
+      - name: user_id
+        data_type: STRING
+        description: "User who triggered event"
+        tests:
+          - not_null
+      - name: event_type
+        data_type: STRING
+        description: "Type of event (view, cart, purchase, wishlist)"
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['view', 'cart', 'purchase', 'wishlist']
+      - name: event_timestamp
+        data_type: TIMESTAMP
+        description: "Timestamp when the event occurred"
+        tests:
+          - not_null
+      - name: product_id
+        data_type: STRING
+
+  - name: stg_order_items
+    description: "Staging model for order items, joins orders and products for easier analysis."
+    columns:
+      - name: order_item_id
+        data_type: STRING
+        description: "Primary key"
+        tests:
+          - not_null
+          - unique
+      - name: order_id
+        data_type: STRING
+        description: "Foreign key to orders"
+        tests:
+          - not_null
+      - name: product_id
+        data_type: STRING
+        description: "Foreign key to products"
+        tests:
+          - not_null
+      - name: user_id
+        data_type: STRING
+        description: "User who purchased item"
+        tests:
+          - not_null
+      - name: quantity
+        data_type: FLOAT64
+        description: "Quantity of item purchased"
+        tests:
+          - not_null
+      - name: item_price
+        data_type: FLOAT64
+        description: "Price per unit of item"
+        tests:
+          - not_null
+      - name: item_total
+        data_type: FLOAT64
+      
+  - name: stg_orders
+    description: "Staging model for orders, casts dates and cleans fields."
+    columns:
+      - name: order_id
+        data_type: STRING
+        description: "Primary key"
+        tests:
+          - not_null
+          - unique
+      - name: user_id
+        data_type: STRING
+        description: "User who placed order"
+      - name: order_date
+        data_type: DATE
+        description: "Date of order"
+        tests:
+          - not_null
+      - name: order_status
+        data_type: STRING
+        description: "Status of the order"
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['completed', 'shipped', 'processing', 'cancelled', 'returned']
+      - name: total_amount
+        data_type: FLOAT64
+        description: "Total amount of order"
+
+  - name: stg_products
+    description: "Staging model for products. Cleans and standardizes product information."
+    columns:
+      - name: product_id
+        data_type: STRING
+        description: "Primary key"
+        tests:
+          - not_null
+          - unique
+      - name: product_name
+        data_type: STRING
+        description: "Name of the product"
+        tests:
+          - not_null
+          - unique
+      - name: category
+        data_type: STRING
+      - name: brand
+        data_type: STRING
+      - name: price
+        data_type: FLOAT64
+      - name: rating
+        data_type: FLOAT64
+
+  - name: stg_reviews
+    description: "Staging model for product reviews."
+    columns:
+      - name: review_id
+        data_type: STRING
+        description: "Primary key"
+        tests:
+          - not_null
+          - unique
+      - name: rating
+        data_type: FLOAT64
+        description: "Rating given by user (1-5)"
+        tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+      - name: order_id
+        data_type: STRING
+      - name: user_id
+        data_type: STRING
+      - name: product_id
+        data_type: STRING
+      - name: review_text
+        data_type: STRING
+      - name: review_date
+        data_type: DATE
+
+  - name: stg_users
+    description: "Staging model for users. Cleans and standardizes user information."
+    columns:
+      - name: user_id
+        data_type: STRING
+        description: "Primary key"
+        tests:
+          - not_null
+          - unique
+      - name: name
+        data_type: STRING
+        description: "User's name"
+        tests:
+          - not_null
+      - name: email
+        data_type: STRING
+        description: "User email address"
+        tests:
+          - not_null
+          - unique
+      - name: gender
+        data_type: STRING
+      - name: city
+        data_type: STRING
+      - name: signup_date
+        data_type: DATE
