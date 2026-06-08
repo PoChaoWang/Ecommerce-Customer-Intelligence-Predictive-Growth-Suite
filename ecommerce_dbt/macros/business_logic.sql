@@ -58,3 +58,33 @@
 {% macro get_reference_date(table_ref, date_column) %}
     (SELECT DATE_ADD(MAX({{ date_column }}), INTERVAL 1 DAY) FROM {{ table_ref }})
 {% endmacro %}
+
+/* 
+    Sigmoid scaling to squash values into 0-1 range.
+*/
+{% macro sigmoid_scaling(column, scale_factor=100.0) %}
+    1 / (1 + EXP(-({{ column }} / {{ scale_factor }})))
+{% endmacro %}
+
+/* 
+    Min-Max scaling using window functions.
+*/
+{% macro min_max_scaling(column) %}
+    SAFE_DIVIDE(
+      {{ column }} - MIN({{ column }}) OVER (),
+      MAX({{ column }}) OVER () - MIN({{ column }}) OVER ()
+    )
+{% endmacro %}
+
+/* 
+    Standardizes health alert levels based on sentiment and risk.
+*/
+{% macro get_health_alert_level(avg_sentiment, risk_ratio) %}
+    CASE
+        WHEN {{ avg_sentiment }} < -0.2 AND {{ risk_ratio }} > 0.4 
+            THEN 'High Risk: Immediate Intervention'
+        WHEN {{ avg_sentiment }} < -0.1 AND {{ risk_ratio }} > 0.25 
+            THEN 'Medium Risk: Monitor Closely'
+        ELSE 'Healthy'
+    END
+{% endmacro %}
