@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: mart_customer_360
+  - name: mart_c360_table
     description: "Master table combining segments, events, and LTV predictions per user."
     columns:
       - name: user_id
@@ -9,91 +9,1082 @@ models:
         tests:
           - not_null
           - unique
+        config:
+          meta:
+            metrics:
+              total_customers:
+                type: count_distinct
+                sql: "${user_id}"
+
+      - name: recency
+        description: "Days since last purchase"
+        config:
+          meta:
+            dimension:
+              label: "Recency (Days)"
+              type: number
+
+      - name: frequency
+        description: "Total number of orders"
+        config:
+          meta:
+            dimension:
+              label: "Order Frequency"
+              type: number
+
+      - name: monetary
+        description: "Total historical spend"
+        config:
+          meta:
+            metrics:
+              total_revenue:
+                type: sum
+                sql: "${monetary}"
+              avg_revenue:
+                type: average
+                sql: "${monetary}"
+
+      - name: recency_score
+        description: "RFM score for recency (1-5)"
+        config:
+          meta:
+            dimension:
+              label: "Recency Score"
+              type: number
+
+      - name: frequency_score
+        description: "RFM score for frequency (1-5)"
+        config:
+          meta:
+            dimension:
+              label: "Frequency Score"
+              type: number
+
+      - name: monetary_score
+        description: "RFM score for monetary (1-5)"
+        config:
+          meta:
+            dimension:
+              label: "Monetary Score"
+              type: number
+
       - name: segment
-        description: "Customer segment"
+        description: "Customer segment based on RFM"
+        config:
+          meta:
+            dimension:
+              label: "Customer Segment"
+              type: string
+
+      - name: compound_score
+        description: "Average sentiment score of customer reviews"
+        config:
+          meta:
+            dimension:
+              label: "Sentiment Score"
+              type: number
+
+      - name: risk_flag
+        description: "Flag indicating customer churn risk (1 = at risk, 0 = not at risk)"
+        config:
+          meta:
+            dimension:
+              label: "Churn Risk Flag"
+              type: number
+            metrics:
+              at_risk_customers:
+                type: count_distinct
+                sql: "CASE WHEN ${risk_flag} = 1 THEN ${user_id} END"
+
+      - name: city
+        description: "City of the user"
+        config:
+          meta:
+            dimension:
+              label: "City"
+              type: string
+
+      - name: gender
+        description: "Gender of the user"
+        config:
+          meta:
+            dimension:
+              label: "Gender"
+              type: string
+
+      - name: signup_date
+        description: "Date the user signed up"
+        config:
+          meta:
+            dimension:
+              label: "Signup Date"
+              type: date
+              time_intervals: ["DAY", "WEEK", "MONTH", "YEAR"]
+
+      - name: total_views
+        description: "Total product page views"
+        config:
+          meta:
+            metrics:
+              sum_total_views:
+                type: sum
+                sql: "${total_views}"
+
+      - name: total_cart_adds
+        description: "Total add-to-cart events"
+        config:
+          meta:
+            metrics:
+              sum_total_cart_adds:
+                type: sum
+                sql: "${total_cart_adds}"
+
       - name: predicted_profit_90_days
         description: "ML predicted profit for next 90 days"
+        config:
+          meta:
+            metrics:
+              avg_predicted_ltv:
+                type: average
+                sql: "${predicted_profit_90_days}"
 
-  - name: mart_churn_risk
-    description: "Identifies users at risk of churning who are highly profitable."
+      - name: prob_minmax
+        description: "MinMax scaled score of predicted profit"
+        config:
+          meta:
+            dimension:
+              label: "LTV Probability Score"
+              type: number
+
+      - name: automation_trigger
+        description: "Recommended automation action for marketing"
+        config:
+          meta:
+            dimension:
+              label: "Automation Trigger"
+              type: string
+
+  - name: mart_edm_suggestions
+    description: "Top categories for EDM targeting based on dormant high-value customers."
     columns:
-      - name: user_id
-        description: "Unique identifier for the customer"
+      - name: category
+        description: "Product category recommended"
+        config:
+          meta:
+            dimension:
+              label: "Product Category"
+              type: string
+
+      - name: total_quantity
+        description: "Total quantity of products sold in this category"
+        config:
+          meta:
+            metrics:
+              sum_total_quantity:
+                type: sum
+                sql: "${total_quantity}"
+
+  - name: mart_product_health_report
+    description: "Detailed report on product ratings, risk reviews, and pain points."
+    columns:
+      - name: product_id
+        description: "Unique identifier for the product"
         tests:
           - not_null
           - unique
-      - name: risk_flag
-        description: "Flag indicating high churn risk"
+        config:
+          meta:
+            metrics:
+              total_products:
+                type: count_distinct
+                sql: "${product_id}"
+
+      - name: product_name
+        description: "Name of the product"
+        config:
+          meta:
+            dimension:
+              label: "Product Name"
+              type: string
+
+      - name: category
+        description: "Product category"
+        config:
+          meta:
+            dimension:
+              label: "Category"
+              type: string
+
+      - name: brand
+        description: "Product brand"
+        config:
+          meta:
+            dimension:
+              label: "Brand"
+              type: string
+
+      - name: price
+        description: "Product price"
+        config:
+          meta:
+            dimension:
+              label: "Price"
+              type: number
+            metrics:
+              avg_price:
+                type: average
+                sql: "${price}"
+
+      - name: avg_rating_overall
+        description: "Overall average rating"
+        config:
+          meta:
+            metrics:
+              avg_rating:
+                type: average
+                sql: "${avg_rating_overall}"
+
+      - name: rating_30d
+        description: "Average rating in the last 30 days"
+        config:
+          meta:
+            dimension:
+              label: "Rating (30d)"
+              type: number
+
+      - name: rating_45d
+        description: "Average rating in the last 45 days"
+        config:
+          meta:
+            dimension:
+              label: "Rating (45d)"
+              type: number
+
+      - name: rating_60d
+        description: "Average rating in the last 60 days"
+        config:
+          meta:
+            dimension:
+              label: "Rating (60d)"
+              type: number
+
+      - name: total_risk_reviews
+        description: "Total number of negative/risk reviews"
+        config:
+          meta:
+            metrics:
+              sum_risk_reviews:
+                type: sum
+                sql: "${total_risk_reviews}"
+
+      - name: top_pain_points
+        description: "Most frequent complaints or issues mentioned in reviews"
+        config:
+          meta:
+            dimension:
+              label: "Top Pain Points"
+              type: string
+
+  - name: mart_sleepy_product_health
+    description: "Health of products frequently bought by dormant customers."
+    columns:
+      - name: product_id
+        description: "Product identifier"
+        config:
+          meta:
+            metrics:
+              total_sleepy_products:
+                type: count_distinct
+                sql: "${product_id}"
+
+      - name: product_name
+        description: "Product name"
+        config:
+          meta:
+            dimension:
+              label: "Product Name"
+              type: string
+
+      - name: category
+        description: "Product category"
+        config:
+          meta:
+            dimension:
+              label: "Category"
+              type: string
+
+      - name: brand
+        description: "Product brand"
+        config:
+          meta:
+            dimension:
+              label: "Brand"
+              type: string
+
+      - name: price
+        description: "Product price"
+        config:
+          meta:
+            dimension:
+              label: "Price"
+              type: number
+
+      - name: avg_rating_overall
+        description: "Overall average rating"
+        config:
+          meta:
+            metrics:
+              avg_rating_sleepy:
+                type: average
+                sql: "${avg_rating_overall}"
+
+      - name: rating_30d
+        description: "Average rating in the last 30 days"
+        config:
+          meta:
+            dimension:
+              label: "Rating (30d)"
+              type: number
+
+      - name: total_risk_reviews
+        description: "Count of risk reviews"
+        config:
+          meta:
+            metrics:
+              sum_risk_reviews_sleepy:
+                type: sum
+                sql: "${total_risk_reviews}"
+
+      - name: top_pain_points
+        description: "Pain points for the product"
+        config:
+          meta:
+            dimension:
+              label: "Top Pain Points"
+              type: string
+
+      - name: action_required
+        description: "Recommended business action"
+        config:
+          meta:
+            dimension:
+              label: "Action Required"
+              type: string
 
   - name: mart_lookalike_seed
-    description: "VVIPs and top percentile predicted profit users for lookalike modeling."
+    description: "Seed list of high-value customers for lookalike audience creation."
     columns:
       - name: user_id
-        description: "Unique identifier for the customer"
+        description: "Unique identifier for the user"
         tests:
           - not_null
           - unique
+        config:
+          meta:
+            metrics:
+              total_lookalike_users:
+                type: count_distinct
+                sql: "${user_id}"
 
-  - name: mart_cart_abandonment
-    description: "Users who added to cart recently but did not purchase."
+      - name: segment
+        description: "Customer segment"
+        config:
+          meta:
+            dimension:
+              label: "Customer Segment"
+              type: string
+
+      - name: recency
+        description: "Days since last purchase"
+        config:
+          meta:
+            dimension:
+              label: "Recency (Days)"
+              type: number
+
+      - name: frequency
+        description: "Total purchase frequency"
+        config:
+          meta:
+            dimension:
+              label: "Order Frequency"
+              type: number
+
+      - name: monetary
+        description: "Total monetary value"
+        config:
+          meta:
+            metrics:
+              total_lookalike_revenue:
+                type: sum
+                sql: "${monetary}"
+
+      - name: predicted_profit_90_days
+        description: "90-day predicted profit"
+        config:
+          meta:
+            metrics:
+              avg_predicted_profit_lookalike:
+                type: average
+                sql: "${predicted_profit_90_days}"
+
+  - name: mart_churn_risk_list
+    description: "Identifies users at high risk of churning with high predicted value."
     columns:
       - name: user_id
-        description: "Unique identifier for the customer"
+        description: "User identifier"
         tests:
           - not_null
           - unique
+        config:
+          meta:
+            metrics:
+              total_churn_risk_users:
+                type: count_distinct
+                sql: "${user_id}"
+
+      - name: segment
+        description: "Customer segment"
+        config:
+          meta:
+            dimension:
+              label: "Customer Segment"
+              type: string
+
+      - name: recency
+        description: "Days since last purchase"
+        config:
+          meta:
+            dimension:
+              label: "Recency (Days)"
+              type: number
+
+      - name: recency_score
+        description: "Recency score (1-5)"
+        config:
+          meta:
+            dimension:
+              label: "Recency Score"
+              type: number
+
+      - name: frequency_score
+        description: "Frequency score (1-5)"
+        config:
+          meta:
+            dimension:
+              label: "Frequency Score"
+              type: number
+
+      - name: predicted_profit_90_days
+        description: "90-day predicted profit"
+        config:
+          meta:
+            metrics:
+              avg_predicted_profit_churn:
+                type: average
+                sql: "${predicted_profit_90_days}"
+
+      - name: risk_flag
+        description: "Flag indicating high churn risk"
+        config:
+          meta:
+            dimension:
+              label: "Churn Risk Flag"
+              type: number
+
+  - name: mart_cart_abandonment_list
+    description: "Customers who abandoned items in their cart with high potential value."
+    columns:
+      - name: user_id
+        description: "User identifier"
+        tests:
+          - not_null
+          - unique
+        config:
+          meta:
+            metrics:
+              total_abandoned_users:
+                type: count_distinct
+                sql: "${user_id}"
+
+      - name: abandoned_product_ids
+        description: "IDs of products left in cart"
+        config:
+          meta:
+            dimension:
+              label: "Abandoned Product IDs"
+              type: string
+              hidden: true
+
+      - name: total_cart_adds
+        description: "Number of products added to cart"
+        config:
+          meta:
+            metrics:
+              avg_cart_adds:
+                type: average
+                sql: "${total_cart_adds}"
+
+      - name: total_views
+        description: "Number of product page views"
+        config:
+          meta:
+            metrics:
+              avg_views_abandoned:
+                type: average
+                sql: "${total_views}"
+
+      - name: segment
+        description: "Customer segment"
+        config:
+          meta:
+            dimension:
+              label: "Customer Segment"
+              type: string
+
+      - name: predicted_profit_90_days
+        description: "90-day predicted profit"
+        config:
+          meta:
+            metrics:
+              avg_predicted_profit_cart:
+                type: average
+                sql: "${predicted_profit_90_days}"
+
+      - name: risk_flag
+        description: "Churn risk flag"
+        config:
+          meta:
+            dimension:
+              label: "Churn Risk Flag"
+              type: number
 
   - name: mart_cohort_retention
-    description: "Retention rate matrix for cohort analysis."
+    description: "Monthly customer retention rates by cohort."
     columns:
       - name: cohort_month
-        description: "The month the user first purchased"
-      - name: user_id
-        description: "Identifier for the customer"
+        description: "The month of first purchase"
         tests:
           - not_null
+        config:
+          meta:
+            dimension:
+              label: "Cohort Month"
+              type: date
+              time_intervals: ["MONTH", "YEAR"]
+
+      - name: cohort_size
+        description: "Number of unique customers in the cohort"
+        config:
+          meta:
+            metrics:
+              avg_cohort_size:
+                type: average
+                sql: "${cohort_size}"
+
+      - name: period_0
+        description: "Retention rate at Month 0"
+        config:
+          meta:
+            dimension:
+              label: "Retention M0"
+              type: number
+      - name: period_1
+        description: "Retention rate at Month 1"
+        config:
+          meta:
+            dimension:
+              label: "Retention M1"
+              type: number
+      - name: period_2
+        description: "Retention rate at Month 2"
+        config:
+          meta:
+            dimension:
+              label: "Retention M2"
+              type: number
+      - name: period_3
+        description: "Retention rate at Month 3"
+        config:
+          meta:
+            dimension:
+              label: "Retention M3"
+              type: number
+      - name: period_4
+        description: "Retention rate at Month 4"
+        config:
+          meta:
+            dimension:
+              label: "Retention M4"
+              type: number
+      - name: period_5
+        description: "Retention rate at Month 5"
+        config:
+          meta:
+            dimension:
+              label: "Retention M5"
+              type: number
+      - name: period_6
+        description: "Retention rate at Month 6"
+        config:
+          meta:
+            dimension:
+              label: "Retention M6"
+              type: number
+      - name: period_7
+        description: "Retention rate at Month 7"
+        config:
+          meta:
+            dimension:
+              label: "Retention M7"
+              type: number
+      - name: period_8
+        description: "Retention rate at Month 8"
+        config:
+          meta:
+            dimension:
+              label: "Retention M8"
+              type: number
+      - name: period_9
+        description: "Retention rate at Month 9"
+        config:
+          meta:
+            dimension:
+              label: "Retention M9"
+              type: number
+      - name: period_10
+        description: "Retention rate at Month 10"
+        config:
+          meta:
+            dimension:
+              label: "Retention M10"
+              type: number
+      - name: period_11
+        description: "Retention rate at Month 11"
+        config:
+          meta:
+            dimension:
+              label: "Retention M11"
+              type: number
+      - name: period_12
+        description: "Retention rate at Month 12"
+        config:
+          meta:
+            dimension:
+              label: "Retention M12"
+              type: number
 
   - name: mart_cohort_revenue
-    description: "Average revenue per user matrix for cohort analysis."
+    description: "Monthly average revenue per user (ARPU) by cohort."
     columns:
       - name: cohort_month
-        description: "The month the user first purchased"
+        description: "The month of first purchase"
+        tests:
+          - not_null
+        config:
+          meta:
+            dimension:
+              label: "Cohort Month"
+              type: date
+              time_intervals: ["MONTH", "YEAR"]
 
-  - name: mart_brand_health
-    description: "Category-level sentiment and risk tracking."
+      - name: period_0
+        description: "ARPU at Month 0"
+        config:
+          meta:
+            dimension:
+              label: "ARPU M0"
+              type: number
+      - name: period_1
+        description: "ARPU at Month 1"
+        config:
+          meta:
+            dimension:
+              label: "ARPU M1"
+              type: number
+      - name: period_2
+        description: "ARPU at Month 2"
+        config:
+          meta:
+            dimension:
+              label: "ARPU M2"
+              type: number
+      - name: period_3
+        description: "ARPU at Month 3"
+        config:
+          meta:
+            dimension:
+              label: "ARPU M3"
+              type: number
+      - name: period_4
+        description: "ARPU at Month 4"
+        config:
+          meta:
+            dimension:
+              label: "ARPU M4"
+              type: number
+      - name: period_5
+        description: "ARPU at Month 5"
+        config:
+          meta:
+            dimension:
+              label: "ARPU M5"
+              type: number
+      - name: period_6
+        description: "ARPU at Month 6"
+        config:
+          meta:
+            dimension:
+              label: "ARPU M6"
+              type: number
+      - name: period_7
+        description: "ARPU at Month 7"
+        config:
+          meta:
+            dimension:
+              label: "ARPU M7"
+              type: number
+      - name: period_8
+        description: "ARPU at Month 8"
+        config:
+          meta:
+            dimension:
+              label: "ARPU M8"
+              type: number
+      - name: period_9
+        description: "ARPU at Month 9"
+        config:
+          meta:
+            dimension:
+              label: "ARPU M9"
+              type: number
+      - name: period_10
+        description: "ARPU at Month 10"
+        config:
+          meta:
+            dimension:
+              label: "ARPU M10"
+              type: number
+      - name: period_11
+        description: "ARPU at Month 11"
+        config:
+          meta:
+            dimension:
+              label: "ARPU M11"
+              type: number
+      - name: period_12
+        description: "ARPU at Month 12"
+        config:
+          meta:
+            dimension:
+              label: "ARPU M12"
+              type: number
+
+  - name: mart_product_affinity
+    description: "Market basket analysis showing co-occurrence count and affinity metrics."
+    columns:
+      - name: affinity_level
+        description: "Granularity of affinity (e.g., product)"
+        config:
+          meta:
+            dimension:
+              label: "Affinity Level"
+              type: string
+
+      - name: product_a_id
+        description: "ID of the first product"
+        config:
+          meta:
+            dimension:
+              label: "Product A ID"
+              type: string
+
+      - name: product_a_name
+        description: "Name of the first product"
+        config:
+          meta:
+            dimension:
+              label: "Product A Name"
+              type: string
+
+      - name: product_a_category
+        description: "Category of the first product"
+        config:
+          meta:
+            dimension:
+              label: "Product A Category"
+              type: string
+
+      - name: product_b_id
+        description: "ID of the second product"
+        config:
+          meta:
+            dimension:
+              label: "Product B ID"
+              type: string
+
+      - name: product_b_name
+        description: "Name of the second product"
+        config:
+          meta:
+            dimension:
+              label: "Product B Name"
+              type: string
+
+      - name: product_b_category
+        description: "Category of the second product"
+        config:
+          meta:
+            dimension:
+              label: "Product B Category"
+              type: string
+
+      - name: co_occurrence_count
+        description: "Number of times both products were bought together"
+        config:
+          meta:
+            metrics:
+              sum_co_occurrence:
+                type: sum
+                sql: "${co_occurrence_count}"
+              avg_co_occurrence:
+                type: average
+                sql: "${co_occurrence_count}"
+
+      - name: support
+        description: "Proportion of transactions that contain both items"
+        config:
+          meta:
+            metrics:
+              avg_support:
+                type: average
+                sql: "${support}"
+
+      - name: confidence_A_to_B
+        description: "Likelihood that product B is bought if product A is bought"
+        config:
+          meta:
+            metrics:
+              avg_confidence:
+                type: average
+                sql: "${confidence_A_to_B}"
+
+  - name: mart_brand_health_monitor
+    description: "Tracks sentiment and risk across different categories and timeframes."
     columns:
       - name: category
         description: "Product category"
         tests:
           - not_null
           - unique
+        config:
+          meta:
+            dimension:
+              label: "Product Category"
+              type: string
+
+      - name: avg_sentiment_score_7d
+        description: "Avg sentiment score in the last 7 days"
+        config:
+          meta:
+            metrics:
+              avg_sentiment_7d:
+                type: average
+                sql: "${avg_sentiment_score_7d}"
+
+      - name: avg_sentiment_score_30d
+        description: "Avg sentiment score in the last 30 days"
+        config:
+          meta:
+            metrics:
+              avg_sentiment_30d:
+                type: average
+                sql: "${avg_sentiment_score_30d}"
+
+      - name: avg_sentiment_score_60d
+        description: "Avg sentiment score in the last 60 days"
+        config:
+          meta:
+            metrics:
+              avg_sentiment_60d:
+                type: average
+                sql: "${avg_sentiment_score_60d}"
+
+      - name: risk_review_ratio_7d
+        description: "Ratio of risk reviews in the last 7 days"
+        config:
+          meta:
+            metrics:
+              avg_risk_ratio_7d:
+                type: average
+                sql: "${risk_review_ratio_7d}"
+
+      - name: risk_review_ratio_30d
+        description: "Ratio of risk reviews in the last 30 days"
+        config:
+          meta:
+            metrics:
+              avg_risk_ratio_30d:
+                type: average
+                sql: "${risk_review_ratio_30d}"
+
+      - name: risk_review_ratio_60d
+        description: "Ratio of risk reviews in the last 60 days"
+        config:
+          meta:
+            metrics:
+              avg_risk_ratio_60d:
+                type: average
+                sql: "${risk_review_ratio_60d}"
+
+      - name: review_count_7d
+        description: "Total review count in the last 7 days"
+        config:
+          meta:
+            metrics:
+              sum_reviews_7d:
+                type: sum
+                sql: "${review_count_7d}"
+
+      - name: review_count_30d
+        description: "Total review count in the last 30 days"
+        config:
+          meta:
+            metrics:
+              sum_reviews_30d:
+                type: sum
+                sql: "${review_count_30d}"
+
+      - name: review_count_60d
+        description: "Total review count in the last 60 days"
+        config:
+          meta:
+            metrics:
+              sum_reviews_60d:
+                type: sum
+                sql: "${review_count_60d}"
+
+      - name: alert_level
+        description: "Derived alert level (Healthy, Medium Risk, High Risk)"
+        config:
+          meta:
+            dimension:
+              label: "Alert Level"
+              type: string
 
   - name: mart_business_recommendations
-    description: "Actionable priority list and estimated profit per user based on rules."
+    description: "Unified recommendation list for marketing and support teams."
     columns:
       - name: user_id
-        description: "Unique identifier for the customer"
+        description: "User identifier"
         tests:
           - not_null
           - unique
+        config:
+          meta:
+            metrics:
+              total_recommended_users:
+                type: count_distinct
+                sql: "${user_id}"
+
       - name: recommended_action
-        description: "Action to take for this user"
+        description: "Suggested business action"
+        config:
+          meta:
+            dimension:
+              label: "Recommended Action"
+              type: string
+
       - name: priority_score
-        description: "Calculated priority score (LTV * Prob)"
+        description: "Priority score for the action"
+        config:
+          meta:
+            metrics:
+              avg_priority_score:
+                type: average
+                sql: "${priority_score}"
+
       - name: estimated_revenue
-        description: "Calculated as LTV * 0.1"
+        description: "Estimated revenue from the recommended action"
+        config:
+          meta:
+            metrics:
+              total_estimated_revenue:
+                type: sum
+                sql: "${estimated_revenue}"
+              avg_estimated_revenue:
+                type: average
+                sql: "${estimated_revenue}"
+
+      - name: segment
+        description: "Customer segment"
+        config:
+          meta:
+            dimension:
+              label: "Customer Segment"
+              type: string
+
+      - name: reason
+        description: "Explanation for the recommendation"
+        config:
+          meta:
+            dimension:
+              label: "Reason"
+              type: string
 
   - name: mart_top_priority_actions
-    description: "Top 100 high-priority business recommendations."
+    description: "Top 100 urgent business recommendations for immediate action."
+    columns:
+      - name: user_id
+        description: "User identifier"
+        tests:
+          - not_null
+          - unique
+        config:
+          meta:
+            metrics:
+              total_priority_users:
+                type: count_distinct
+                sql: "${user_id}"
 
-  - name: mart_edm_suggestions
-    description: "Top categories by quantity from dormant high-value customers for EDM targeting."
+      - name: recommended_action
+        description: "Suggested business action"
+        config:
+          meta:
+            dimension:
+              label: "Recommended Action"
+              type: string
 
-  - name: mart_product_health_report
-    description: "Detailed report on product ratings, risk reviews, and top pain points."
+      - name: priority_score
+        description: "Priority score"
+        config:
+          meta:
+            metrics:
+              avg_top_priority_score:
+                type: average
+                sql: "${priority_score}"
 
-  - name: mart_sleepy_product_health
-    description: "Products frequently bought by dormant high-value customers that may need attention, including top pain points."
+      - name: estimated_revenue
+        description: "Estimated revenue"
+        config:
+          meta:
+            metrics:
+              total_top_estimated_revenue:
+                type: sum
+                sql: "${estimated_revenue}"
 
-  - name: mart_product_affinity
-    description: "Market basket analysis showing support and confidence for product pairs."
+      - name: segment
+        description: "Customer segment"
+        config:
+          meta:
+            dimension:
+              label: "Customer Segment"
+              type: string
+
+      - name: reason
+        description: "Reasoning"
+        config:
+          meta:
+            dimension:
+              label: "Reason"
+              type: string
