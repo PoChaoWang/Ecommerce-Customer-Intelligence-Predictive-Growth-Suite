@@ -1,0 +1,3 @@
+SERVICE_ACCOUNT_JSON="your-gcp-service-account-key.json"
+PROJECT_ID="your-gcp-project-id"
+DATASET_ID="your-bigquery-dataset-id"
