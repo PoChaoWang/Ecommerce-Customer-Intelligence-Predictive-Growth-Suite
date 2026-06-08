@@ -1,0 +1,99 @@
+version: 2
+
+models:
+  - name: mart_customer_360
+    description: "Master table combining segments, events, and LTV predictions per user."
+    columns:
+      - name: user_id
+        description: "Unique identifier for the customer"
+        tests:
+          - not_null
+          - unique
+      - name: segment
+        description: "Customer segment"
+      - name: predicted_profit_90_days
+        description: "ML predicted profit for next 90 days"
+
+  - name: mart_churn_risk
+    description: "Identifies users at risk of churning who are highly profitable."
+    columns:
+      - name: user_id
+        description: "Unique identifier for the customer"
+        tests:
+          - not_null
+          - unique
+      - name: risk_flag
+        description: "Flag indicating high churn risk"
+
+  - name: mart_lookalike_seed
+    description: "VVIPs and top percentile predicted profit users for lookalike modeling."
+    columns:
+      - name: user_id
+        description: "Unique identifier for the customer"
+        tests:
+          - not_null
+          - unique
+
+  - name: mart_cart_abandonment
+    description: "Users who added to cart recently but did not purchase."
+    columns:
+      - name: user_id
+        description: "Unique identifier for the customer"
+        tests:
+          - not_null
+          - unique
+
+  - name: mart_cohort_retention
+    description: "Retention rate matrix for cohort analysis."
+    columns:
+      - name: cohort_month
+        description: "The month the user first purchased"
+      - name: user_id
+        description: "Identifier for the customer"
+        tests:
+          - not_null
+
+  - name: mart_cohort_revenue
+    description: "Average revenue per user matrix for cohort analysis."
+    columns:
+      - name: cohort_month
+        description: "The month the user first purchased"
+
+  - name: mart_brand_health
+    description: "Category-level sentiment and risk tracking."
+    columns:
+      - name: category
+        description: "Product category"
+        tests:
+          - not_null
+          - unique
+
+  - name: mart_business_recommendations
+    description: "Actionable priority list and estimated profit per user based on rules."
+    columns:
+      - name: user_id
+        description: "Unique identifier for the customer"
+        tests:
+          - not_null
+          - unique
+      - name: recommended_action
+        description: "Action to take for this user"
+      - name: priority_score
+        description: "Calculated priority score (LTV * Prob)"
+      - name: estimated_revenue
+        description: "Calculated as LTV * 0.1"
+
+  - name: mart_top_priority_actions
+    description: "Top 100 high-priority business recommendations."
+
+  - name: mart_edm_suggestions
+    description: "Top categories by quantity from dormant high-value customers for EDM targeting."
+
+  - name: mart_product_health_report
+    description: "Detailed report on product ratings, risk reviews, and top pain points."
+
+  - name: mart_sleepy_product_health
+    description: "Products frequently bought by dormant high-value customers that may need attention, including top pain points."
+
+  - name: mart_product_affinity
+    description: "Market basket analysis showing support and confidence for product pairs."
