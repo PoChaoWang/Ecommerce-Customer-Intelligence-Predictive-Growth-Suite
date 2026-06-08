@@ -2,12 +2,14 @@ version: 2
 
 models:
   - name: int_product_review_health
-    description: "Product-level health metrics including ratings and risk review counts."
+    description: "Product-level health metrics including ratings, risk review counts, and keyword extraction."
     columns:
       - name: product_id
         tests:
           - not_null
           - unique
+      - name: top_pain_points
+        description: "Top 3 keywords extracted from negative reviews for this product."
 
   - name: int_rfm_scores
     description: "Calculates R, F, M values and scores using NTILE(5) and custom logic."
