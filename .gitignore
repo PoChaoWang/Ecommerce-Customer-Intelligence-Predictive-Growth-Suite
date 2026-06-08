@@ -1,6 +1,7 @@
 # Python
 venv/
 .venv/
+venv_dbt/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -27,3 +28,7 @@ schema/Model_Run_Metadata.json
 .pycache/
 __pycache__/
 *.py[cod]
+static/
+agents/
+.env
+scripts/achive
