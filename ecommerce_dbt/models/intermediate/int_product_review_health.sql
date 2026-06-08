@@ -46,6 +46,8 @@ SELECT
   a.rating_30d,
   a.rating_45d,
   a.rating_60d,
-  COALESCE(a.total_risk_reviews, 0) AS total_risk_reviews
+  COALESCE(a.total_risk_reviews, 0) AS total_risk_reviews,
+  COALESCE(pp.top_pain_points, 'N/A') AS top_pain_points
 FROM product_info p
 LEFT JOIN aggregated a USING (product_id)
+LEFT JOIN {{ source('external_intermediate', 'int_product_pain_points') }} pp USING (product_id)
