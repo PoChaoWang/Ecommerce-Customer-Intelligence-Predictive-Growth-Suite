@@ -2,6 +2,8 @@
 
 [English](README.md) | [繁體中文](README.zh-TW.md)
 
+資料來源：[Kaggle](https://www.kaggle.com/datasets/abhayayare/e-commerce-dataset/data)
+
 本專案是一套以電商成長為核心的商業決策系統，目標不是單純產出分析報表或預測模型，而是把分散的顧客、交易、瀏覽、評論資料，轉換成行銷、CRM、產品團隊可以直接採取行動的優先級名單與決策建議。
 
 它回答的是營運團隊每天真正需要解決的問題：
