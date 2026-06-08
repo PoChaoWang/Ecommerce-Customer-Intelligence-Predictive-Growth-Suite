@@ -2,13 +2,13 @@ WITH thresholds AS (
   SELECT
     PERCENTILE_CONT(predicted_profit_90_days, 0.75) OVER () AS high_ltv,
     PERCENTILE_CONT(predicted_profit_90_days, 0.75) OVER () AS high_cart_profit,
-    PERCENTILE_CONT(frequency, 0.75) OVER () AS high_frequency
-  FROM {{ ref('mart_customer_360') }}
-  LIMIT 1
-),
+    PERCENTILE_CONT(predicted_profit_90_days, 0.75) OVER () AS high_frequency
+    FROM {{ ref('mart_c360_table') }}
+    LIMIT 1
+    ),
 
-merged AS (
-  SELECT
+    merged AS (
+    SELECT
     c.user_id,
     c.segment,
     c.predicted_profit_90_days,
@@ -19,11 +19,11 @@ merged AS (
     COALESCE(ca.predicted_profit_90_days, 0) AS cart_predicted_profit,
     CASE WHEN ls.user_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_vvip_seed,
     COALESCE(cr.predicted_profit_90_days, 0) AS churn_risk_score
-  FROM {{ ref('mart_customer_360') }} c
-  LEFT JOIN {{ ref('mart_cart_abandonment') }} ca USING (user_id)
-  LEFT JOIN {{ ref('mart_lookalike_seed') }} ls USING (user_id)
-  LEFT JOIN {{ ref('mart_churn_risk') }} cr USING (user_id)
-)
+    FROM {{ ref('mart_c360_table') }} c
+    LEFT JOIN {{ ref('mart_cart_abandonment_list') }} ca USING (user_id)
+    LEFT JOIN {{ ref('mart_lookalike_seed') }} ls USING (user_id)
+    LEFT JOIN {{ ref('mart_churn_risk_list') }} cr USING (user_id)
+    )
 
 SELECT
   m.user_id AS user_id,
