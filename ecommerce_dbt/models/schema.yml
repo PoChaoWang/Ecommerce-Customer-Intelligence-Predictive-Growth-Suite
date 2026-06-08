@@ -41,6 +41,12 @@ sources:
             tests:
               - not_null
               - unique
+          - name: predicted_profit_90_days
+            data_type: FLOAT64
+          - name: primary_driver
+            data_type: STRING
+          - name: primary_barrier
+            data_type: STRING
       - name: int_product_pain_points
         description: "Top 3 pain points (keywords) per product from Python script."
         columns:
