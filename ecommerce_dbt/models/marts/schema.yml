@@ -13,6 +13,7 @@ models:
           meta:
             metrics:
               total_customers:
+                label: "Total Customers"
                 type: count_distinct
                 sql: "${user_id}"
 
@@ -23,6 +24,11 @@ models:
             dimension:
               label: "Recency (Days)"
               type: number
+            metrics:
+              avg_recency:
+                label: "Average Recency"
+                type: average
+                sql: "${recency}"
 
       - name: frequency
         description: "Total number of orders"
@@ -31,6 +37,11 @@ models:
             dimension:
               label: "Order Frequency"
               type: number
+            metrics:
+              avg_frequency:
+                label: "Average Frequency"
+                type: average
+                sql: "${frequency}"
 
       - name: monetary
         description: "Total historical spend"
@@ -38,9 +49,11 @@ models:
           meta:
             metrics:
               total_revenue:
+                label: "Total Historical Revenue"
                 type: sum
                 sql: "${monetary}"
               avg_revenue:
+                label: "Avg Revenue per Customer"
                 type: average
                 sql: "${monetary}"
 
@@ -75,6 +88,12 @@ models:
             dimension:
               label: "Customer Segment"
               type: string
+              colors:
+                'At-Risk Repeat Customer': "#5470c6"
+                'Dormant High-Value Customer': "#fc8452"
+                'General Potential Customer': "#91cc75"
+                'Recent New Customer': "#fac858"
+                'VVIP Loyal High-Value Customer': "#ee6666"
 
       - name: compound_score
         description: "Average sentiment score of customer reviews"
@@ -83,6 +102,11 @@ models:
             dimension:
               label: "Sentiment Score"
               type: number
+            metrics:
+              avg_sentiment_score:
+                label: "Average Sentiment Score"
+                type: average
+                sql: "${compound_score}"
 
       - name: risk_flag
         description: "Flag indicating customer churn risk (1 = at risk, 0 = not at risk)"
@@ -93,8 +117,14 @@ models:
               type: number
             metrics:
               at_risk_customers:
+                label: "At-risk Sentiment Customers"
                 type: count_distinct
                 sql: "CASE WHEN ${risk_flag} = 1 THEN ${user_id} END"
+              sentiment_risk_rate:
+                label: "Sentiment Risk Rate"
+                type: number
+                sql: "${at_risk_customers} / NULLIF(${total_customers}, 0)"
+                format: "percent"
 
       - name: city
         description: "City of the user"
