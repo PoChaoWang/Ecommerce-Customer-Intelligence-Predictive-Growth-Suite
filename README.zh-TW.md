@@ -15,7 +15,7 @@
 | 數據倉庫 (Data Warehouse) | Google BigQuery |
 | 數據轉換 (Data Transformation) | dbt (SQL), Python |
 | 機器學習 (Machine Learning) | BigQuery ML, Scikit-learn, Pandas |
-| AI 代理人 (AI Agent) | LLM (自動化 CRM 報告產出) |
+| AI 代理人 (AI Agent) | LLM (自動化 CRM 報告產出) - **[製作中]** |
 | BI / 視覺化 | LightDash (相容 Looker) |
 
 ---

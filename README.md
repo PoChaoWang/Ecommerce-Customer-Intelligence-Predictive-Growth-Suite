@@ -15,7 +15,7 @@ A full-stack data project integrating **Data Engineering**, **Analytics**, and *
 | Data Warehouse | Google BigQuery |
 | Data Transformation | dbt (SQL), Python |
 | Machine Learning | BigQuery ML, Scikit-learn, Pandas |
-| AI Agent | LLM (automated CRM reporting) |
+| AI Agent | LLM (automated CRM reporting) - **[WIP]** |
 | BI / Visualization | LightDash (Looker-compatible) |
 
 ---
