@@ -112,4 +112,52 @@ The project is structured in five maturity phases:
 
 ---
 
+## Local Streaming Setup & Execution Guide
+
+This project supports a full real-time data streaming pipeline. Below are the steps to deploy and run it locally:
+
+### 1. Install Dependencies & Spark Runtime
+The Spark streaming consumer requires **Java 17 or Java 11** installed on your machine.
+Activate your virtual environment and install the required Python packages:
+```bash
+# Run this after activating your virtual environment
+pip install -r requirements.txt
+```
+
+### 2. Start Docker Containers (Kafka & Kafka UI)
+Ensure Docker Desktop is running locally, then execute:
+```bash
+# Start Zookeeper, Kafka Broker, and Kafka UI
+docker compose up -d
+```
+*   **Kafka UI Access**: Open your browser and navigate to **[http://localhost:8085](http://localhost:8085)** to monitor topics and messages in real-time.
+
+### 3. Initialize & Fill History Gap (Optional)
+To reset the local dataset and automatically fill the gap between the last Kaggle update date and yesterday:
+```bash
+# Reset local CSV files back to clean Kaggle originals
+python scripts/run_gap_filler.py --action reset
+
+# Incrementally fill the historical gap (up to yesterday)
+python scripts/run_gap_filler.py --action gap-fill
+```
+
+### 4. Run the Real-Time Pipeline
+Open two separate terminal windows or tabs to run the Producer and Consumer concurrently:
+
+*   **Terminal 1 - Start the Kafka Producer**:
+    Streams simulated stateful e-commerce events and orders into Kafka at a specified interval (e.g., 1 message per second):
+    ```bash
+    python scripts/run_kafka_producer.py --delay 1.0
+    ```
+*   **Terminal 2 - Start the Spark Structured Streaming Consumer**:
+    Subscribes to all Kafka topics and writes streaming batches directly to BigQuery raw tables using the Storage Write API (Direct Mode):
+    ```bash
+    python scripts/spark_bigquery_consumer.py
+    ```
+
+*(Press `Ctrl + C` in either terminal to stop execution.)*
+
+---
+
 *Built as a portfolio project demonstrating end-to-end data engineering and applied ML in a business context.*

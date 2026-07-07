@@ -112,4 +112,52 @@
 
 ---
 
+## 本地即時串流環境部署與執行指引 (Local Streaming Setup & Execution Guide)
+
+本專案支援完整的實時數據串流管道模擬，以下是本地環境部署與執行的完整步驟：
+
+### 1. 安裝本地 Python 依賴與 PySpark 運行環境
+本專案的 Spark 串流消費者需要 **Java 17 或 Java 11** 的支持，請先確保本地已安裝 Java。
+接著，在虛擬環境中安裝 Python 套件：
+```bash
+# 激活您的虛擬環境後執行
+pip install -r requirements.txt
+```
+
+### 2. 啟動 Docker 容器 (Kafka & Kafka UI)
+確保本地 Docker Desktop 已啟動，並在專案根目錄下運行：
+```bash
+# 啟動 Zookeeper, Kafka Broker 與 Kafka UI 監控網頁
+docker compose up -d
+```
+*   **Kafka UI 網頁**: 可開啟瀏覽器訪問 **[http://localhost:8085](http://localhost:8085)** 觀察即時 Topic 與 Message。
+
+### 3. 資料初始化與歷史補齊 (選填)
+若要清空測試數據，並自動補齊從原 Kaggle 最後更新日到昨天為止的歷史空缺：
+```bash
+# 一鍵還原/重置本地 CSV 至 Kaggle 原始狀態
+python scripts/run_gap_filler.py --action reset
+
+# 增量自動補齊歷史斷層（至昨天為止）
+python scripts/run_gap_filler.py --action gap-fill
+```
+
+### 4. 執行即時串流管道
+請開啟兩個終端機視窗，分別啟動生產者與消費者：
+
+*   **終端機 1 - 啟動 Kafka 實時模擬生產者**：
+    以每秒 1 筆的速度，持續將符合電商關聯性規則的即時行為/訂單發送至 Kafka：
+    ```bash
+    python scripts/run_kafka_producer.py --delay 1.0
+    ```
+*   **終端機 2 - 啟動 Spark Structured Streaming 消費者**：
+    Spark 將即時訂閱 Kafka 的多個主題，並使用 BigQuery Storage Write API (Direct Mode) 強制 Commit 寫入 BigQuery raw 資料集：
+    ```bash
+    python scripts/spark_bigquery_consumer.py
+    ```
+
+*(欲中止發送或消費，直接在各自的終端機按下 `Ctrl + C` 即可。)*
+
+---
+
 *本專案作為個人作品集，展示了在商業環境中端到端數據工程與機器學習的應用能力。*
