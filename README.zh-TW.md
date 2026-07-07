@@ -167,7 +167,7 @@
 * **快速靜態驗證 (`dbt parse`)**：
   - 無需建立資料庫連線，快速解析 `dbt_project.yml` 與各 `schema.yml` 設定，以最快速度抓出關聯錯誤或設定語法錯誤。
 * **狀態比對測試 (Slim CI)**：
-  - CI 流程會從 GCS Bucket (`my-project-for-bigquery-445809-dbt-artifacts`) 下載 Production 環境的 `manifest.json` 狀態檔。
+  - CI 流程會從 GCS Bucket下載 Production 環境的 `manifest.json` 狀態檔。
   - 使用 dbt 的狀態選擇器與自訂的 [profiles.yml](ecommerce_dataset/ecommerce_dbt/profiles.yml) 進行精準建置：`dbt build --select state:modified+ --defer --state <path>`。
   - **僅針對有變動的 Model 及其下游受影響的 Model**，在動態建立的臨時資料集（`ci_pr_<pr_number>`）中進行建置與資料品質測試 (`dbt test`)。這大幅降低了 BigQuery 運算成本，並將 CI 執行時間縮短至最低。
 
