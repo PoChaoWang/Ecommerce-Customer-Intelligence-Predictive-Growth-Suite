@@ -160,15 +160,26 @@ models:
         description: "User's name"
         tests:
           - not_null
-      - name: email
-        data_type: STRING
-        description: "User email address"
-        tests:
-          - not_null
-          - unique
       - name: gender
         data_type: STRING
       - name: city
         data_type: STRING
       - name: signup_date
         data_type: DATE
+
+  - name: stg_users_hashed
+    description: "Staging model for users with secure hashed emails."
+    columns:
+      - name: user_id
+        data_type: STRING
+        description: "Primary key"
+        tests:
+          - not_null
+          - unique
+      - name: hashed_email
+        data_type: STRING
+        description: "SHA-256 hashed email address"
+        tests:
+          - not_null
+          - unique
+
