@@ -167,7 +167,7 @@ When a developer opens or updates a Pull Request (PR) targeting the `main` branc
 * **Fast Configuration Check (`dbt parse`)**:
   - Compiles the dbt project and parses configurations without requiring a database connection, capturing schema errors or relation typos in seconds.
 * **State-Aware Testing (Slim CI)**:
-  - The workflow downloads the production state `manifest.json` from GCS (`my-project-for-bigquery-445809-dbt-artifacts`).
+  - The workflow downloads the production state `manifest.json` from GCS.
   - Executes a defer-based build targeting the dynamic CI dataset (`ci_pr_<pr_number>`): `dbt build --select state:modified+ --defer --state <path>` (using the custom [profiles.yml](ecommerce_dataset/ecommerce_dbt/profiles.yml)).
   - **Only builds and tests modified models and their downstream dependencies**, drastically reducing BigQuery query costs and keeping PR validation times extremely fast.
 
