@@ -1,0 +1,17 @@
+# Local .terraform directories
+.terraform/
+
+# Ignore lock file if you prefer, but usually we ignore state and vars:
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
+
+# Ignore variables files (which contain project id and other secrets)
+*.tfvars
+*.tfvars.json
+
+# Ignore override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
