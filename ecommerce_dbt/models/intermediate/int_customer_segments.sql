@@ -11,7 +11,7 @@ reviews AS (
 ),
 
 sentiment_detail AS (
-    SELECT DISTINCT 
+    SELECT DISTINCT
         review_id,
         compound_score,
         risk_flag
@@ -19,17 +19,17 @@ sentiment_detail AS (
 ),
 
 latest_sentiment AS (
-    SELECT 
+    SELECT
         r.user_id,
         sd.compound_score,
         sd.risk_flag,
-        ROW_NUMBER() OVER (PARTITION BY r.user_id ORDER BY r.review_date DESC) as rn
-    FROM reviews r
-    JOIN sentiment_detail sd ON r.review_id = sd.review_id
+        ROW_NUMBER() OVER (PARTITION BY r.user_id ORDER BY r.review_date DESC) AS rn
+    FROM reviews AS r
+    INNER JOIN sentiment_detail AS sd ON r.review_id = sd.review_id
 ),
 
 sentiment_user AS (
-    SELECT 
+    SELECT
         user_id,
         compound_score,
         risk_flag
@@ -44,11 +44,11 @@ users AS (
 joined AS (
     SELECT
         rfm.*,
-        COALESCE(sentiment_user.compound_score, 0) AS compound_score,
-        COALESCE(sentiment_user.risk_flag, 0) AS risk_flag,
         users.city,
         users.gender,
-        users.signup_date
+        users.signup_date,
+        COALESCE(sentiment_user.compound_score, 0) AS compound_score,
+        COALESCE(sentiment_user.risk_flag, 0) AS risk_flag
     FROM rfm
     LEFT JOIN sentiment_user ON rfm.user_id = sentiment_user.user_id
     LEFT JOIN users ON rfm.user_id = users.user_id

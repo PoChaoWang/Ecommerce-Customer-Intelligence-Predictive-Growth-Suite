@@ -38,9 +38,11 @@ archive
 # dbt
 ecommerce_dbt/logs/
 ecommerce_dbt/target/
+ecommerce_dbt/.user.yml
 dbt.log
 query_log.sql
 logs/
+.user.yml
 
 # spark
 spark_checkpoints/
