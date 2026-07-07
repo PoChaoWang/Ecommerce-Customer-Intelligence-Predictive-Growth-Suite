@@ -18,7 +18,7 @@ observation_period AS (
         user_id,
         DATE_DIFF(d.split_date, MAX(order_date), DAY) AS recency,
         COUNT(DISTINCT order_id) AS frequency
-    FROM {{ ref('stg_orders') }}, dates d
+    FROM {{ ref('stg_orders') }}, dates AS d
     WHERE order_date < d.split_date
     GROUP BY user_id, d.split_date
 ),
@@ -27,7 +27,7 @@ prediction_period AS (
     SELECT
         user_id,
         SUM({{ calculate_profit('total_amount') }}) AS actual_profit
-    FROM {{ ref('stg_orders') }}, dates d
+    FROM {{ ref('stg_orders') }}, dates AS d
     WHERE order_date >= d.split_date
     GROUP BY user_id
 ),
@@ -37,7 +37,7 @@ events AS (
 ),
 
 sentiment AS (
-    SELECT 
+    SELECT
         user_id,
         AVG(compound_score) AS compound_score
     FROM {{ source('external_intermediate', 'int_review_sentiment_user') }}
@@ -52,7 +52,7 @@ SELECT
     COALESCE(e.total_cart_adds, 0) AS total_cart_adds,
     COALESCE(s.compound_score, 0) AS compound_score,
     COALESCE(p.actual_profit, 0) AS actual_profit
-FROM observation_period o
-LEFT JOIN prediction_period p ON o.user_id = p.user_id
-LEFT JOIN events e ON o.user_id = e.user_id
-LEFT JOIN sentiment s ON o.user_id = s.user_id
+FROM observation_period AS o
+LEFT JOIN prediction_period AS p ON o.user_id = p.user_id
+LEFT JOIN events AS e ON o.user_id = e.user_id
+LEFT JOIN sentiment AS s ON o.user_id = s.user_id

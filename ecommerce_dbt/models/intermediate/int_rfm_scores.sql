@@ -19,7 +19,7 @@ rfm_base AS (
         DATE_DIFF({{ get_reference_date(ref('stg_orders'), 'order_date') }}, s.max_order_date, DAY) AS recency,
         s.frequency,
         s.monetary
-    FROM order_summary s
+    FROM order_summary AS s
 )
 
 SELECT

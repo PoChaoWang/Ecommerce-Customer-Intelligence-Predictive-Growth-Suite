@@ -1,13 +1,15 @@
-with source as (
-    select * from {{ source('raw_ecommerce', 'raw_orders') }}
+WITH source AS (
+    SELECT * FROM {{ source('raw_ecommerce', 'raw_orders') }}
 ),
-renamed as (
-    select
+
+renamed AS (
+    SELECT
         order_id,
         user_id,
-        date(cast(order_date as timestamp)) as order_date,
-        cast(total_amount as float64) as total_amount,
-        order_status
-    from source
+        cast(total_amount AS float64) AS total_amount,
+        order_status,
+        date(cast(order_date AS timestamp)) AS order_date
+    FROM source
 )
-select * from renamed
+
+SELECT * FROM renamed

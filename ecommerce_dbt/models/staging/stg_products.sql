@@ -1,14 +1,16 @@
-with source as (
-    select * from {{ source('raw_ecommerce', 'raw_products') }}
+WITH source AS (
+    SELECT * FROM {{ source('raw_ecommerce', 'raw_products') }}
 ),
-renamed as (
-    select
+
+renamed AS (
+    SELECT
         product_id,
         product_name,
         category,
         brand,
-        cast(price as float64) as price,
-        cast(rating as float64) as rating
-    from source
+        cast(price AS float64) AS price,
+        cast(rating AS float64) AS rating
+    FROM source
 )
-select * from renamed
+
+SELECT * FROM renamed

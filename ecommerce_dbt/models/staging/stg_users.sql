@@ -1,14 +1,16 @@
-with source as (
-    select * from {{ source('raw_ecommerce', 'raw_users') }}
+WITH source AS (
+    SELECT * FROM {{ source('raw_ecommerce', 'raw_users') }}
 ),
-renamed as (
-    select
+
+renamed AS (
+    SELECT
         user_id,
         name,
         gender,
         city,
-        date(cast(signup_date as timestamp)) as signup_date 
-    from source
+        date(cast(signup_date AS timestamp)) AS signup_date
+    FROM source
 )
-select * from renamed
+
+SELECT * FROM renamed
 -- test
