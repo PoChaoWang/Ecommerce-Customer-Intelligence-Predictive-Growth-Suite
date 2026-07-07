@@ -1118,3 +1118,16 @@ models:
             dimension:
               label: "Reason"
               type: string
+
+  - name: mart_lookalike_hashed_email
+    description: "Lookalike seed list containing hashed emails for marketing platform ingestion."
+    columns:
+      - name: user_id
+        description: "Primary key / User ID"
+        tests:
+          - not_null
+          - unique
+      - name: hashed_email
+        description: "Secure SHA-256 hashed email"
+        tests:
+          - not_null
