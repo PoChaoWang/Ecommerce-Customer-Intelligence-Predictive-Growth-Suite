@@ -1,0 +1,16 @@
+[sqlfluff]
+dialect = bigquery
+# We will use the dbt templater since it's a dbt project
+templater = dbt
+runaway_check_limit = 10
+max_line_length = 120
+
+[sqlfluff:templater:dbt]
+project_dir = ./ecommerce_dbt
+profiles_dir = ./ecommerce_dbt
+
+[sqlfluff:indentation]
+tab_space_size = 4
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = upper

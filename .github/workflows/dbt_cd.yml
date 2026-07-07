@@ -1,0 +1,58 @@
+name: dbt CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ecommerce_dbt/**'
+      - '.github/workflows/dbt_cd.yml'
+
+permissions:
+  contents: read
+  id-token: write # Required for WIF
+
+env:
+  DBT_PROJECT: "my-project-for-bigquery-445809"
+  GCS_BUCKET: "my-project-for-bigquery-445809-dbt-artifacts"
+  DBT_PROFILES_DIR: "./ecommerce_dbt"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/302883063343/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+          service_account: 'ecommerce-dataset@my-project-for-bigquery-445809.iam.gserviceaccount.com'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Install dbt packages
+        run: |
+          cd ecommerce_dbt
+          dbt deps
+
+      - name: Run Production Deploy (dbt run & test)
+        run: |
+          cd ecommerce_dbt
+          dbt build --target prod
+
+      - name: Upload Manifest to GCS (for future Slim CI comparison)
+        run: |
+          gsutil cp ecommerce_dbt/target/manifest.json gs://${{ env.GCS_BUCKET }}/manifest.json

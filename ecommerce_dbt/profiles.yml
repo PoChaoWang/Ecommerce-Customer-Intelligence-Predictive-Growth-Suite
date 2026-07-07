@@ -1,0 +1,32 @@
+ecommerce_dbt:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('DBT_PROJECT') }}"
+      dataset: dbt_ecommerce_dev
+      threads: 4
+      timeout_seconds: 300
+      location: asia-east1
+      priority: interactive
+
+    ci:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('DBT_PROJECT') }}"
+      dataset: "ci_pr_{{ env_var('GITHUB_PR_NUMBER') }}"
+      threads: 4
+      timeout_seconds: 300
+      location: asia-east1
+      priority: interactive
+
+    prod:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('DBT_PROJECT') }}"
+      dataset: dbt_ecommerce_marts
+      threads: 4
+      timeout_seconds: 300
+      location: asia-east1
+      priority: interactive

@@ -1,0 +1,86 @@
+name: dbt CI
+
+on:
+  pull_request:
+    paths:
+      - 'ecommerce_dbt/**'
+      - 'scripts/**'
+      - 'agents/**'
+      - '.github/workflows/dbt_ci.yml'
+
+permissions:
+  contents: read
+  id-token: write # Required for WIF OIDC token request
+
+env:
+  DBT_PROJECT: "my-project-for-bigquery-445809"
+  GCS_BUCKET: "my-project-for-bigquery-445809-dbt-artifacts"
+  DBT_PROFILES_DIR: "./ecommerce_dbt"
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Linting & Python Dependencies
+        run: |
+          pip install ruff sqlfluff sqlfluff-templater-dbt
+          pip install -r requirements.txt
+
+      - name: Run Python Lint & Format Checks
+        run: |
+          ruff check scripts/ agents/
+          ruff format --check scripts/ agents/
+
+      # Authenticate to GCP using Workload Identity Federation
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/302883063343/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+          service_account: 'ecommerce-dataset@my-project-for-bigquery-445809.iam.gserviceaccount.com'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Install dbt packages
+        run: |
+          cd ecommerce_dbt
+          dbt deps
+
+      - name: Fast Configuration Syntax Check (dbt parse)
+        run: |
+          cd ecommerce_dbt
+          dbt parse --target ci
+        env:
+          GITHUB_PR_NUMBER: ${{ github.event.number }}
+
+      # Prepare Slim CI: download production manifest.json from GCS
+      - name: Fetch Production Manifest for Slim CI
+        run: |
+          mkdir -p ecommerce_dbt/prod-manifest
+          gsutil cp gs://${{ env.GCS_BUCKET }}/manifest.json ecommerce_dbt/prod-manifest/manifest.json || echo "No manifest found in GCS. Will run full compile/run."
+
+      - name: SQL Linting (sqlfluff)
+        run: |
+          sqlfluff lint ecommerce_dbt/models/ --dialect bigquery
+
+      - name: Run & Test Modified dbt Models (Slim CI)
+        run: |
+          cd ecommerce_dbt
+          if [ -f prod-manifest/manifest.json ]; then
+            # Compile, build and test only modified models & downstream dependents
+            dbt build --target ci --select state:modified+ --defer --state prod-manifest/
+          else
+            # Fallback if no manifest exists: build everything
+            dbt build --target ci
+          fi
+        env:
+          GITHUB_PR_NUMBER: ${{ github.event.number }}
