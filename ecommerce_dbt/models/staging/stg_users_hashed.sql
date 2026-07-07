@@ -4,10 +4,7 @@ with source as (
 renamed as (
     select
         user_id,
-        name,
-        gender,
-        city,
-        date(cast(signup_date as timestamp)) as signup_date 
+        to_hex(sha256(lower(trim(email)))) as hashed_email
     from source
 )
 select * from renamed
