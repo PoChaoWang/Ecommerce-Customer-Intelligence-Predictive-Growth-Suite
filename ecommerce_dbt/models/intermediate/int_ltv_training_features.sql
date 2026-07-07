@@ -37,7 +37,11 @@ events AS (
 ),
 
 sentiment AS (
-    SELECT * FROM {{ source('external_intermediate', 'int_review_sentiment_user') }}
+    SELECT 
+        user_id,
+        AVG(compound_score) AS compound_score
+    FROM {{ source('external_intermediate', 'int_review_sentiment_user') }}
+    GROUP BY user_id
 )
 
 SELECT
