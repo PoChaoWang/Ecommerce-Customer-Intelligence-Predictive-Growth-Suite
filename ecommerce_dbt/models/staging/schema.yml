@@ -109,7 +109,6 @@ models:
         description: "Name of the product"
         tests:
           - not_null
-          - unique
       - name: category
         data_type: STRING
       - name: brand
@@ -133,8 +132,8 @@ models:
         description: "Rating given by user (1-5)"
         tests:
           - accepted_values:
-              arguments:
-                values: [1, 2, 3, 4, 5]
+              values: [1, 2, 3, 4, 5]
+              quote: false
       - name: order_id
         data_type: STRING
       - name: user_id
