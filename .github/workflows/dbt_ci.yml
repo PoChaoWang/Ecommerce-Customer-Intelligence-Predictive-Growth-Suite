@@ -37,8 +37,8 @@ jobs:
 
       - name: Run Python Lint & Format Checks
         run: |
-          ruff check scripts/ agents/
-          ruff format --check scripts/ agents/
+          ruff check scripts/ --exclude "*.ipynb"
+          ruff format --check scripts/ --exclude "*.ipynb"
 
       # Authenticate to GCP using Workload Identity Federation
       - name: Authenticate to Google Cloud

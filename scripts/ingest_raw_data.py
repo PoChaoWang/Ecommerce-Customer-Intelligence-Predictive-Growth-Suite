@@ -66,7 +66,7 @@ def main():
     # 4. Loop through files and upload
     for file_name, table_name in DATA_FILES.items():
         if os.path.exists(file_name):
-            print(f"--------------------------------------------------")
+            print("--------------------------------------------------")
             print(f"📦 Detected file {file_name}, reading...")
 
             # Read CSV
