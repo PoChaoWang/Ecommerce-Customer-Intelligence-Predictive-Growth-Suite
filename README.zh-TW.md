@@ -34,16 +34,26 @@
        │                                     │
        └───────────────────┬─────────────────┘
                            ▼
-       Google BigQuery (raw_ecommerce 資料集)
-                           │
-                           ▼  [dbt]
-       Staging (基礎層)  →  Intermediate (中間層)  →  Marts (應用層)
+                 Google BigQuery (raw_ecommerce 資料集)
                            │
                            ▼
-       BigQuery ML / Python  (LTV 價值預測、NLP 情緒分析)
+                      dbt Staging
                            │
                            ▼
-       LightDash 儀表板  +  商業建議清單 (Business Recommendation List)
+                    dbt Intermediate (特徵層)
+                           │
+             ┌─────────────┴─────────────┐
+             ▼                           │
+    BigQuery ML / Python (機器學習預測)    │
+             │                           │
+             ▼                           ▼
+     prediction tables ──────────►   dbt Marts (業務層)
+                                         │ (整合 LTV 計算優先級)
+                                         ▼
+                             C360 / 商業建議名單 (CRM 行動方案)
+                                         │
+                                         ▼
+                              LightDash 儀表板 + CRM Action
 ```
 
 ---

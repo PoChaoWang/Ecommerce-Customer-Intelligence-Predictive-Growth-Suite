@@ -34,16 +34,26 @@ A full-stack data project integrating **Data Engineering**, **Analytics**, and *
        │                                     │
        └───────────────────┬─────────────────┘
                            ▼
-       Google BigQuery (raw_ecommerce dataset)
-                           │
-                           ▼  [dbt]
-       Staging  →  Intermediate  →  Marts
+                  Google BigQuery (raw_ecommerce dataset)
                            │
                            ▼
-       BigQuery ML / Python (LTV prediction, NLP sentiment)
+                      dbt Staging
                            │
                            ▼
-       LightDash Dashboard  +  Business Recommendation List
+                       dbt Intermediate (Feature Layer)
+                           │
+             ┌─────────────┴─────────────┐
+             ▼                           │
+    BigQuery ML / Python (ML Prediction) │
+             │                           │
+             ▼                           ▼
+     prediction tables ──────────►   dbt Marts (Business Layer)
+                                         │ (Integrate LTV for Priority Score)
+                                         ▼
+                            C360 / CRM Recommendation List
+                                         │
+                                         ▼
+                            LightDash Dashboard + CRM Action
 ```
 
 ---
