@@ -14,6 +14,7 @@
 |---|---|
 | 數據倉庫 (Data Warehouse) | Google BigQuery |
 | 數據轉換 (Data Transformation) | dbt (SQL), Python |
+| 數據管道 / 串流 (Streaming Pipeline) | Apache Kafka, Apache Spark (Structured Streaming) |
 | 機器學習 (Machine Learning) | BigQuery ML, Scikit-learn, Pandas |
 | AI 代理人 (AI Agent) | LLM (自動化 CRM 報告產出) - **[製作中]** |
 | BI / 視覺化 | LightDash (相容 Looker) |
@@ -23,19 +24,26 @@
 ## 架構概覽 (Architecture Overview)
 
 ```
-原始 CSV 檔案 (用戶、訂單、產品、評論、行為事件)
-    │
-    ▼  [Python 導入腳本]
-Google BigQuery  (raw_ecommerce 資料集)
-    │
-    ▼  [dbt]
-Staging (基礎層)  →  Intermediate (中間層)  →  Marts (應用層)
-    │
-    ▼
-BigQuery ML / Python  (LTV 價值預測、NLP 情緒分析)
-    │
-    ▼
-LightDash 儀表板  +  商業建議清單 (Business Recommendation List)
+[原始 CSV 歷史數據]                [即時模擬數據 (Faker + Python)]
+       │                                     │
+       │                                     ▼ (即時寫入)
+       │                              Apache Kafka (訊息佇列)
+       │                                     │
+       │ (批次載入)                           ▼ (即時串流消費)
+       │                              Apache Spark (Structured Streaming)
+       │                                     │
+       └───────────────────┬─────────────────┘
+                           ▼
+       Google BigQuery (raw_ecommerce 資料集)
+                           │
+                           ▼  [dbt]
+       Staging (基礎層)  →  Intermediate (中間層)  →  Marts (應用層)
+                           │
+                           ▼
+       BigQuery ML / Python  (LTV 價值預測、NLP 情緒分析)
+                           │
+                           ▼
+       LightDash 儀表板  +  商業建議清單 (Business Recommendation List)
 ```
 
 ---
