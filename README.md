@@ -14,6 +14,7 @@ A full-stack data project integrating **Data Engineering**, **Analytics**, and *
 |---|---|
 | Data Warehouse | Google BigQuery |
 | Data Transformation | dbt (SQL), Python |
+| Streaming Pipeline | Apache Kafka, Apache Spark (Structured Streaming) |
 | Machine Learning | BigQuery ML, Scikit-learn, Pandas |
 | AI Agent | LLM (automated CRM reporting) - **[WIP]** |
 | BI / Visualization | LightDash (Looker-compatible) |
@@ -23,19 +24,26 @@ A full-stack data project integrating **Data Engineering**, **Analytics**, and *
 ## Architecture Overview
 
 ```
-Raw CSVs (users, orders, products, reviews, events)
-    │
-    ▼  [Python ingest script]
-Google BigQuery  (raw_ecommerce dataset)
-    │
-    ▼  [dbt]
-Staging  →  Intermediate  →  Marts
-    │
-    ▼
-BigQuery ML / Python  (LTV prediction, NLP sentiment)
-    │
-    ▼
-LightDash Dashboard  +  Business Recommendation List
+[Raw CSV History Data]         [Real-time Simulation (Faker + Python)]
+       │                                     │
+       │                                     ▼ (Real-time Write)
+       │                              Apache Kafka (Message Queue)
+       │                                     │
+       │ (Batch Ingest)                      ▼ (Real-time Stream Consume)
+       │                              Apache Spark (Structured Streaming)
+       │                                     │
+       └───────────────────┬─────────────────┘
+                           ▼
+       Google BigQuery (raw_ecommerce dataset)
+                           │
+                           ▼  [dbt]
+       Staging  →  Intermediate  →  Marts
+                           │
+                           ▼
+       BigQuery ML / Python (LTV prediction, NLP sentiment)
+                           │
+                           ▼
+       LightDash Dashboard  +  Business Recommendation List
 ```
 
 ---
