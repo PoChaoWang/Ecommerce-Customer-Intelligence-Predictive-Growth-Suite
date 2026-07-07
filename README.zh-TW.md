@@ -150,6 +150,42 @@
 
 ---
 
+## CI/CD 流程設計與自動化部署 (CI/CD Pipeline & Automated Deployment)
+
+本專案採用 **GitHub Actions** 與 **GCP (Google Cloud Platform)** 整合，建構了安全的數據開發管道與自動化部署流程。
+
+### 1. 安全驗證與權限控管 (GCP Workload Identity Federation)
+為確保安全性，我們不使用傳統且具安全風險的長期 Service Account JSON 金鑰。
+* **無金鑰驗證 (Keyless Authentication)**：透過 GCP **Workload Identity Federation (WIF)**，GitHub Actions 在執行時會動態向 GCP 請求短期的 OIDC Token 進行驗證。
+* **來源限制**：僅限定本 GitHub 專案 (`PoChaoWang/Ecommerce-Customer-Intelligence-Predictive-Growth-Suite`) 能夠扮演執行 BigQuery 運作與 GCS 讀寫的 Service Account (`ecommerce-dataset`)。相關基礎設施定義於 [terraform/cicd.tf](ecommerce_dataset/terraform/cicd.tf)。
+
+### 2. 持續整合流程 (Continuous Integration - PR Trigger)
+當開發人員向 `main` 分支提交 Pull Request (PR) 時，CI 管道 [.github/workflows/dbt_ci.yml](ecommerce_dataset/.github/workflows/dbt_ci.yml) 會自動觸發並執行以下流程：
+* **程式碼檢查 (Linting & Formatting)**：
+  - 使用 **`ruff`** 快速檢查並排版 `scripts/` 與 `agents/` 目錄下的 Python 檔案。
+  - 使用 **`sqlfluff`** (搭配 dbt 解析器與 [.sqlfluff](ecommerce_dataset/.sqlfluff) 設定) 靜態檢查 `models/` 目錄下的 SQL 程式碼風格與語法標準。
+* **快速靜態驗證 (`dbt parse`)**：
+  - 無需建立資料庫連線，快速解析 `dbt_project.yml` 與各 `schema.yml` 設定，以最快速度抓出關聯錯誤或設定語法錯誤。
+* **狀態比對測試 (Slim CI)**：
+  - CI 流程會從 GCS Bucket (`my-project-for-bigquery-445809-dbt-artifacts`) 下載 Production 環境的 `manifest.json` 狀態檔。
+  - 使用 dbt 的狀態選擇器與自訂的 [profiles.yml](ecommerce_dataset/ecommerce_dbt/profiles.yml) 進行精準建置：`dbt build --select state:modified+ --defer --state <path>`。
+  - **僅針對有變動的 Model 及其下游受影響的 Model**，在動態建立的臨時資料集（`ci_pr_<pr_number>`）中進行建置與資料品質測試 (`dbt test`)。這大幅降低了 BigQuery 運算成本，並將 CI 執行時間縮短至最低。
+
+### 3. 持續部署流程 (Continuous Deployment - Merge/Push to Main)
+當 PR 被合併至 `main` 分支時，CD 管道 [.github/workflows/dbt_cd.yml](ecommerce_dataset/.github/workflows/dbt_cd.yml) 會自動啟動：
+* **Production 部署**：直接在 GitHub Runner 上執行 `dbt build --target prod`，將所有更新的 Model 建置於生產環境。
+* **狀態產物保存**：成功部署後，將編譯生成的最新 `manifest.json` 上傳至 GCS Bucket。此檔案將作為未來新 PR 進行 Slim CI 比對時的最新狀態基準。
+
+### 4. 基礎設施即程式碼 (Terraform 部署)
+與 CI/CD 相關的所有 GCP 資源（如 GCS Bucket、WIF Pool 與 Provider、IAM 綁定等）皆定義於 [terraform/cicd.tf](ecommerce_dataset/terraform/cicd.tf) 中。
+如需更新或重新建立 CI/CD 基礎設施，請在 `terraform` 目錄下執行：
+```bash
+terraform plan
+terraform apply
+```
+
+---
+
 ## 本地即時串流環境部署與執行指引 (Local Streaming Setup & Execution Guide)
 
 本專案支援完整的實時數據串流管道模擬，以下是本地環境部署與執行的完整步驟：

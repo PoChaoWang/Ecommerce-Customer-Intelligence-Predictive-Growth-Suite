@@ -150,6 +150,43 @@ We use **Terraform** to manage fine-grained IAM bindings for each BigQuery datas
 
 ---
 
+## CI/CD Pipeline & Automated Deployment
+
+This project integrates **GitHub Actions** with **Google Cloud Platform (GCP)** to establish a secure, automated data development pipeline and deployment workflow.
+
+### 1. Secure Authentication & Role Access (GCP Workload Identity Federation)
+To ensure maximum security, we avoid using traditional, long-lived Service Account JSON keys.
+* **Keyless Authentication**: Through GCP **Workload Identity Federation (WIF)**, GitHub Actions dynamically requests short-lived OIDC tokens from GCP to authenticate.
+* **Repository Restrictions**: Access is strictly limited to this GitHub repository (`PoChaoWang/Ecommerce-Customer-Intelligence-Predictive-Growth-Suite`) to impersonate the service account (`ecommerce-dataset`) for BigQuery executions and GCS operations. The underlying infrastructure is defined in [terraform/cicd.tf](ecommerce_dataset/terraform/cicd.tf).
+
+### 2. Continuous Integration Workflow (PR Trigger)
+When a developer opens or updates a Pull Request (PR) targeting the `main` branch, the CI pipeline [.github/workflows/dbt_ci.yml](ecommerce_dataset/.github/workflows/dbt_ci.yml) is triggered automatically:
+* **Code Linting & Formatting**:
+  - Uses **`ruff`** to quickly lint and format Python files in the `scripts/` and `agents/` directories.
+  - Uses **`sqlfluff`** (with the dbt templater and configured in [.sqlfluff](ecommerce_dataset/.sqlfluff)) to statically check SQL code style and BigQuery syntax standards in `models/`.
+* **Fast Configuration Check (`dbt parse`)**:
+  - Compiles the dbt project and parses configurations without requiring a database connection, capturing schema errors or relation typos in seconds.
+* **State-Aware Testing (Slim CI)**:
+  - The workflow downloads the production state `manifest.json` from GCS (`my-project-for-bigquery-445809-dbt-artifacts`).
+  - Executes a defer-based build targeting the dynamic CI dataset (`ci_pr_<pr_number>`): `dbt build --select state:modified+ --defer --state <path>` (using the custom [profiles.yml](ecommerce_dataset/ecommerce_dbt/profiles.yml)).
+  - **Only builds and tests modified models and their downstream dependencies**, drastically reducing BigQuery query costs and keeping PR validation times extremely fast.
+
+### 3. Continuous Deployment Workflow (Merge to Main)
+Once a PR is merged into `main`, the CD pipeline [.github/workflows/dbt_cd.yml](ecommerce_dataset/.github/workflows/dbt_cd.yml) runs:
+* **Production Deployment**: Executes `dbt build --target prod` directly inside GitHub Actions runner to deploy and verify the models in the production environment.
+* **Artifact Archiving**: Uploads the compiled `manifest.json` back to GCS, updating the source of truth for the next PR's Slim CI comparison.
+
+### 4. Infrastructure as Code (Terraform)
+All GCP resources related to the CI/CD pipeline (such as the GCS bucket, WIF Pool and Provider, and IAM bindings) are defined in [terraform/cicd.tf](ecommerce_dataset/terraform/cicd.tf).
+To initialize or apply infrastructure changes, run:
+```bash
+cd terraform
+terraform plan
+terraform apply
+```
+
+---
+
 ## Local Streaming Setup & Execution Guide
 
 This project supports a full real-time data streaming pipeline. Below are the steps to deploy and run it locally:
