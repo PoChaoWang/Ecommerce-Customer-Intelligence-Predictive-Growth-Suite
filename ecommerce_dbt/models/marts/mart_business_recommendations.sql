@@ -21,8 +21,8 @@ merged AS (
         COALESCE(cr.predicted_profit_90_days, 0) AS churn_risk_score
     FROM {{ ref('mart_c360_table') }} AS c
     LEFT JOIN {{ ref('mart_cart_abandonment_list') }} AS ca ON c.user_id = ca.user_id
-LEFT JOIN {{ ref('mart_lookalike_seed') }} AS ls USING (user_id)
-LEFT JOIN {{ ref('mart_churn_risk_list') }} AS cr USING (user_id)
+    LEFT JOIN {{ ref('mart_lookalike_seed') }} AS ls ON c.user_id = ls.user_id
+    LEFT JOIN {{ ref('mart_churn_risk_list') }} AS cr ON c.user_id = cr.user_id
 )
 
 SELECT

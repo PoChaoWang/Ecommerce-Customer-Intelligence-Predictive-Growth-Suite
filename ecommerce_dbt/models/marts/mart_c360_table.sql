@@ -55,5 +55,5 @@ SELECT
 
 FROM {{ ref('int_customer_segments') }} AS cs
 LEFT JOIN {{ ref('int_event_aggregates') }} AS ea ON cs.user_id = ea.user_id
-LEFT JOIN {{ ref('int_ltv_training_features') }} AS lf USING (user_id)
-LEFT JOIN predictions AS lp USING (user_id)
+LEFT JOIN {{ ref('int_ltv_training_features') }} AS lf ON cs.user_id = lf.user_id
+LEFT JOIN predictions AS lp ON cs.user_id = lp.user_id

@@ -50,4 +50,4 @@ COALESCE(a.total_risk_reviews, 0) AS total_risk_reviews,
 COALESCE(pp.top_pain_points, 'N/A') AS top_pain_points
 FROM product_info AS p
 LEFT JOIN aggregated AS a ON p.product_id = a.product_id
-LEFT JOIN {{ source('external_intermediate', 'int_product_pain_points') }} AS pp USING (product_id)
+LEFT JOIN {{ source('external_intermediate', 'int_product_pain_points') }} AS pp ON p.product_id = pp.product_id
