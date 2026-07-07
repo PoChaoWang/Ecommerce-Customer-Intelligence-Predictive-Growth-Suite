@@ -15,7 +15,7 @@ permissions:
 env:
   DBT_PROJECT: "my-project-for-bigquery-445809"
   GCS_BUCKET: "my-project-for-bigquery-445809-dbt-artifacts"
-  DBT_PROFILES_DIR: "./ecommerce_dbt"
+  DBT_PROFILES_DIR: "${{ github.workspace }}/ecommerce_dbt"
 
 jobs:
   lint-and-test:
