@@ -15,7 +15,9 @@ PROJECT_ID = os.getenv("PROJECT_ID")
 DATASET_ID = os.getenv("DATASET_ID")
 
 if not all([SERVICE_ACCOUNT_JSON, PROJECT_ID, DATASET_ID]):
-    raise RuntimeError("Error: Please ensure SERVICE_ACCOUNT_JSON, PROJECT_ID, and DATASET_ID are set in the .env file")
+    raise RuntimeError(
+        "Error: Please ensure SERVICE_ACCOUNT_JSON, PROJECT_ID, and DATASET_ID are set in the .env file"
+    )
 
 # Mapping of source files to BigQuery table names
 DATA_FILES = {
@@ -40,11 +42,13 @@ def main():
     credentials = service_account.Credentials.from_service_account_file(
         SERVICE_ACCOUNT_JSON
     )
-    
+
     # Initialize BigQuery Client to check/create dataset
     client = bigquery.Client(credentials=credentials, project=PROJECT_ID)
 
-    print(f"🚀 Starting data ingestion to GCP Project: {PROJECT_ID} (Dataset: {DATASET_ID})")
+    print(
+        f"🚀 Starting data ingestion to GCP Project: {PROJECT_ID} (Dataset: {DATASET_ID})"
+    )
 
     # 3. Ensure Dataset exists
     dataset_ref = bigquery.DatasetReference(PROJECT_ID, DATASET_ID)
@@ -60,7 +64,9 @@ def main():
             print(f"✅ Dataset {DATASET_ID} created successfully.")
         except Exception as e:
             print(f"❌ Failed to create or access dataset: {e}")
-            print("Please ensure your Service Account has 'BigQuery Data Editor' and 'BigQuery User' roles.")
+            print(
+                "Please ensure your Service Account has 'BigQuery Data Editor' and 'BigQuery User' roles."
+            )
             return
 
     # 4. Loop through files and upload
@@ -88,7 +94,9 @@ def main():
             except Exception as e:
                 print(f"❌ Error uploading {table_name}: {e}")
                 if "403" in str(e):
-                    print("Hint: This is likely a permission issue. Ensure the Service Account has 'BigQuery Data Editor' role on the project.")
+                    print(
+                        "Hint: This is likely a permission issue. Ensure the Service Account has 'BigQuery Data Editor' role on the project."
+                    )
         else:
             print(f"⚠️ File {file_name} not found, skipping.")
 
