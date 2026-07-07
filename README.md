@@ -122,6 +122,34 @@ The project is structured in five maturity phases:
 
 ---
 
+## Data Privacy & Security
+
+When designing the data warehouse, this project follows the **Principle of Least Privilege** and **Privacy Compliance** standards. We enforce strict access controls on both sensitive user data (PII) and the different layers of the data warehouse.
+
+### 1. PII Data Protection (User Sensitive Information)
+* **Removing Raw Email**: To prevent sensitive PII (Personally Identifiable Information) from being exposed during data analysis and modeling, the plain-text `email` column was **completely removed** from the queries in the staging model [stg_users.sql](ecommerce_dbt/models/staging/stg_users.sql).
+* **Secure Hashing**: Marketing and advertising platforms (e.g., Facebook Ads, Google Ads) typically require email addresses as seed lists for audience matching and lookalike modeling. To support this securely, we built a dedicated [stg_users_hashed.sql](ecommerce_dbt/models/staging/stg_users_hashed.sql) model:
+  - Standardizes emails using `lower(trim(email))`.
+  - Hashes the normalized email using the highly secure **SHA-256** algorithm, storing it as a hexadecimal string via `to_hex(sha256(...))`.
+  - This hash is cryptographically one-way, meeting marketing integration requirements while fully protecting user privacy.
+* **Final Marketing Output**: The marketing-specific model [mart_lookalike_hashed_email.sql](ecommerce_dbt/models/marts/marketing/mart_lookalike_hashed_email.sql) contains only the `hashed_email` and segment prediction labels, allowing the marketing team to safely export and upload lists without exposing raw credentials.
+
+### 2. Dataset-Level Access Control (GCP BigQuery IAM)
+We use **Terraform** to manage fine-grained IAM bindings for each BigQuery dataset to prevent data misuse and unauthorized access:
+
+* **Raw Dataset (`raw_ecommerce`)**:
+  * **Role**: `roles/bigquery.dataViewer` (Read-only)
+  * **Scope**: Granted only to the dbt Service Account and data engineering teams. This prevents raw ingest data from being accidentally modified or deleted.
+* **Staging and Intermediate Datasets (`dbt_ecommerce_staging`, `dbt_ecommerce_intermediate`)**:
+  * **Role**: `roles/bigquery.dataEditor` (Read/Write)
+  * **Scope**: **Strictly restricted to the dbt Service Account**. General data analysts and marketing teams are **completely blocked** from these layers.
+  * **Purpose**: Staging and Intermediate layers contain views and semi-processed data. Blocking user access prevents analysts from querying raw intermediate views directly (avoiding high BigQuery scan fees), prevents downstream dependency breaks if intermediate schemas change, and secures PII fields from bypass reading.
+* **Marts Dataset (`dbt_ecommerce_marts`)**:
+  * **Role**: The dbt Service Account is granted `dataEditor` to write/update models, while analysts and marketing teams are granted `dataViewer` (Read-only).
+  * **Purpose**: Users can only access fully cleaned, aggregated, and anonymized tables in the Marts layer, guaranteeing high-performance dashboard reporting and data consistency.
+
+---
+
 ## Local Streaming Setup & Execution Guide
 
 This project supports a full real-time data streaming pipeline. Below are the steps to deploy and run it locally:

@@ -122,6 +122,34 @@
 
 ---
 
+## 資料隱私與安全防護 (Data Privacy & Security)
+
+本專案在設計數據倉庫時，遵循 **最小權限原則 (Principle of Least Privilege)** 與 **隱私合規規範 (Privacy Compliance)**，特別針對敏感的用戶資料（PII）以及各資料分層的權限存取進行嚴格管控。
+
+### 1. 使用者敏感資訊處理 (PII Data Protection)
+* **移除原始 Email**：為避免敏感的 PII（個人識別資訊）在數據分析與建模過程中外洩，我們已在基礎 Staging 模型 [stg_users.sql](ecommerce_dbt/models/staging/stg_users.sql) 的查詢中，將明文 `email` 欄位**完全移除**。
+* **獨立雜湊處理 (Secure Hashing)**：行銷或推薦平台（如 Facebook Ads、Google Ads）在進行廣告投放或 Lookalike 分眾比對時，通常需要 Email 作為比對種子。為此，我們建立了獨立的 [stg_users_hashed.sql](ecommerce_dbt/models/staging/stg_users_hashed.sql) 模型：
+  - 使用 `lower(trim(email))` 對 Email 進行標準化處理。
+  - 使用安全強度極高的 **SHA-256** 演算法進行雜湊，並轉換為 16 進位字串（`to_hex(sha256(...))`）保存。
+  - 此雜湊過程不可逆，既能滿足行銷匹配需求，又確保了使用者隱私安全。
+* **最終行銷輸出**：行銷團隊專屬的 [mart_lookalike_hashed_email.sql](ecommerce_dbt/models/marts/marketing/mart_lookalike_hashed_email.sql) 模型僅合併 `hashed_email` 與預測標籤，供行銷團隊安全匯出投放。
+
+### 2. 資料集層級權限控制 (GCP BigQuery IAM)
+我們使用 **Terraform** 對 BigQuery 內的各資料集（Datasets）進行精細化權限控管，防範資料誤用與越權存取：
+
+* **Raw 資料集 (`raw_ecommerce`)**：
+  * **權限級別**：`roles/bigquery.dataViewer` (唯讀)
+  * **存取對象**：僅開放給 dbt 執行用的 Service Account 與數據工程人員。防止原始數據被意外修改或刪除。
+* **中間/半成品資料集 (`dbt_ecommerce_staging`, `dbt_ecommerce_intermediate`)**：
+  * **權限級別**：`roles/bigquery.dataEditor` (編輯/寫入)
+  * **存取對象**：**僅限 dbt 執行用的 Service Account**，對一般分析師與行銷團隊**完全鎖定**。
+  * **防護目的**：Staging 與 Intermediate 包含大量的 View（視圖）與半成品，鎖定這兩層能防範使用者串接錯誤的中間資料、防止 BigQuery 重複執行視圖運算導致的高昂成本，並確保敏感欄位不被旁路讀取。
+* **業務產出層 (`dbt_ecommerce_marts`)**：
+  * **權限級別**：dbt Service Account 擁有 `dataEditor` 進行寫入更新；數據分析師與行銷團隊僅授予 `dataViewer` (唯讀權限)。
+  * **防護目的**：使用者僅能存取已清洗、聚合且經過隱私脫敏的 Marts 表，確保決策報表的高效與一致性。
+
+---
+
 ## 本地即時串流環境部署與執行指引 (Local Streaming Setup & Execution Guide)
 
 本專案支援完整的實時數據串流管道模擬，以下是本地環境部署與執行的完整步驟：
