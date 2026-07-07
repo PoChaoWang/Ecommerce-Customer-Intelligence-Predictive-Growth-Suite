@@ -1,3 +1,21 @@
+WITH predictions AS (
+    SELECT 
+        user_id,
+        predicted_profit_90_days,
+        primary_driver,
+        primary_barrier
+    FROM (
+        SELECT 
+            user_id,
+            predicted_profit_90_days,
+            primary_driver,
+            primary_barrier,
+            ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY predicted_profit_90_days DESC) as rn
+        FROM {{ source('external_intermediate', 'int_ltv_predictions') }}
+    )
+    WHERE rn = 1
+)
+
 SELECT
   cs.user_id AS user_id,
   cs.recency AS recency,
@@ -38,4 +56,4 @@ SELECT
 FROM {{ ref('int_customer_segments') }} cs
 LEFT JOIN {{ ref('int_event_aggregates') }} ea USING (user_id)
 LEFT JOIN {{ ref('int_ltv_training_features') }} lf USING (user_id)
-LEFT JOIN {{ source('external_intermediate', 'int_ltv_predictions') }} lp USING (user_id)
+LEFT JOIN predictions lp USING (user_id)
