@@ -35,3 +35,9 @@ Jinja2>=3.1.2
 Faker>=19.0.0
 kafka-python-ng>=2.2.2
 pyspark==3.5.1
+
+# Airflow & Orchestration
+apache-airflow>=2.10.0
+apache-airflow-providers-slack
+apache-airflow-providers-http
+

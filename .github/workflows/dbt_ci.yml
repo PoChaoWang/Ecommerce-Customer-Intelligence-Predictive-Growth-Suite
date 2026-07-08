@@ -6,6 +6,8 @@ on:
       - 'ecommerce_dbt/**'
       - 'scripts/**'
       - 'agents/**'
+      - 'airflow/**'
+      - 'tests/**'
       - '.github/workflows/dbt_ci.yml'
 
 permissions:
@@ -37,8 +39,12 @@ jobs:
 
       - name: Run Python Lint & Format Checks
         run: |
-          ruff check scripts/ --exclude "*.ipynb"
-          ruff format --check scripts/ --exclude "*.ipynb"
+          ruff check scripts/ airflow/ tests/ --exclude "*.ipynb"
+          ruff format --check scripts/ airflow/ tests/ --exclude "*.ipynb"
+
+      - name: Run Airflow DAG Integrity Test
+        run: |
+          python -m unittest tests/test_dag_integrity.py
 
       # Authenticate to GCP using Workload Identity Federation
       - name: Authenticate to Google Cloud
