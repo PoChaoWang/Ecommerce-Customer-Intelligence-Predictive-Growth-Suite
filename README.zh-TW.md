@@ -2,26 +2,39 @@
 
 [English](README.md) | [繁體中文](README.zh-TW.md)
 
-這是一個整合了**數據工程**、**數據分析**與 **AI** 的全棧數據專案，旨在將原始電商數據轉化為可執行的商業建議。本系統使用 **BigQuery**、**dbt**、**BigQuery ML** 以及 **LightDash (相容 Looker)** 建構。
+這是一個整合了**數據工程 (Data Engineering)**、**數據分析 (Data Analytics)** 與 **AI/ML** 的全棧數據專案，旨在將原始電商數據轉化為可執行的商業決策建議。
 
-> 我們的目標不只是產出報表，而是直接告訴 CRM、行銷與產品團隊：*「今天該聯繫誰，以及該提供他們什麼優惠。」*
+> 💡 **核心價值**：本系統不只產出靜態報表，而是主動為 CRM、行銷與產品團隊提供「每日行動方案」——直接回答：**「今天該聯繫哪些客戶？該提供什麼優惠？誰有流失風險？」**
 
 ---
 
-## 技術棧 (Tech Stack)
+## 🚀 專案亮點與工程指標 (Key Highlights)
 
-| 層級 | 工具 |
+* **商業價值驅動**：整合 RFM 模型與 BigQuery ML 預測的生命週期價值 (LTV)，自動產出客戶全視角畫像 (C360) 與高優先級 CRM 行動建議。
+* **企業級 CI/CD 與 Slim CI**：利用 GitHub Actions 與 GCP Workload Identity Federation (無金鑰驗證)，搭配 Slim CI 僅測試修改的 dbt 模型，**BigQuery 節點運算成本降低 90% 以上**。
+* **零查詢成本監控 (Zero-Query-Cost)**：Airflow 每日自動調度，並透過解析本地 `run_results.json` 產出執行日報與即時 Slack/Email 警報，**不對 BigQuery 發起任何額外查詢**。
+* **隱私安全合規 (PII Protection)**：Staging 層移除敏感 Email，採 SHA-256 進行不可逆雜湊，並透過 Terraform 實施 BigQuery 資料集層級 (Raw/Staging/Marts) 的精細化 IAM 權限控管。
+* **雲端生產級容器編排 (GKE & Terraform)**：使用 Terraform 一鍵佈署 VPC 與自動縮放的 GKE 叢集，並以 Kubernetes 容器化技術部署 Kafka 串流、Postgres PVC 與 Airflow KubernetesExecutor (整合 git-sync)。
+
+---
+
+## 🛠️ 技術棧 (Tech Stack)
+
+| 層級 | 技術與工具 |
 |---|---|
-| 數據倉庫 (Data Warehouse) | Google BigQuery |
-| 數據轉換 (Data Transformation) | dbt (SQL), Python |
-| 數據管道 / 串流 (Streaming Pipeline) | Apache Kafka, Apache Spark (Structured Streaming) |
-| 機器學習 (Machine Learning) | BigQuery ML, Scikit-learn, Pandas |
-| AI 代理人 (AI Agent) | LLM (自動化 CRM 報告產出) - **[製作中]** |
-| BI / 視覺化 | LightDash (相容 Looker) |
+| **數據倉庫 (Data Warehouse)** | Google BigQuery |
+| **數據轉換 (Data Transformation)** | dbt (SQL), Python |
+| **數據管道 / 串流 (Streaming Pipeline)** | Apache Kafka, Apache Spark (Structured Streaming) |
+| **機器學習 (Machine Learning)** | BigQuery ML (XGBoost/迴歸模型), Scikit-learn, Pandas |
+| **自然語言處理 (NLP)** | VADER (情緒分析) |
+| **自動化調度 (Orchestration)** | Apache Airflow |
+| **基礎設施即程式碼 (IaC)** | Terraform |
+| **容器編排 (Orchestration)** | Google Kubernetes Engine (GKE), Docker, Kubernetes |
+| **BI 與視覺化 (BI & Visualization)** | LightDash (相容 Looker) |
 
 ---
 
-## 架構概覽 (Architecture Overview)
+## 📐 系統架構圖 (System Architecture)
 
 ```
 [原始 CSV 歷史數據]                [即時模擬數據 (Faker + Python)]
@@ -37,10 +50,10 @@
                  Google BigQuery (raw_ecommerce 資料集)
                            │
                            ▼
-                      dbt Staging
+                       dbt Staging
                            │
                            ▼
-                    dbt Intermediate (特徵層)
+                     dbt Intermediate (特徵層)
                            │
              ┌─────────────┴─────────────┐
              ▼                           │
@@ -53,276 +66,130 @@
                              C360 / 商業建議名單 (CRM 行動方案)
                                          │
                                          ▼
-                              LightDash 儀表板 + CRM Action
+                             LightDash 儀表板 + CRM Action
 ```
 
 ---
 
-## dbt 分層設計 (dbt Layer Design)
+## 💾 數據流與建模設計 (Data & Modeling Design)
 
+### 1. dbt 分層架構 (dbt Layer Design)
 本專案遵循嚴格的 dbt 三層架構，每一層都有明確的職責：
+* **Staging (`stg_`)** — 對原始資料進行輕量清洗與標準化（例如 [stg_users.sql](ecommerce_dbt/models/staging/stg_users.sql)）。此層不包含業務邏輯，僅負責統一命名規範與資料型別，並實施敏感資訊遮蔽。
+* **Intermediate (`int_`)** — 業務邏輯的核心所在。此層負責計算 RFM 分數 (`int_rfm_scores`)、留存同期群特徵 (`int_cohort_base`) 以及 LTV 訓練特徵 (`int_ltv_training_features`)，將邏輯與最終展現分離以確保模型複用性。
+* **Marts (`mart_`)** — 直接面向商業應用的資料表：例如 `mart_c360_table` (客戶全視角畫像) 與 `mart_business_recommendations` (商業建議)。這是 CRM 與行銷團隊真正查詢的對象。
 
-- **Staging (`stg_`)** — 對原始資料進行輕量清洗與標準化（例如 `stg_users`, `stg_orders`）。此層不包含業務邏輯，僅負責統一命名規範與資料型別。
-
-- **Intermediate (`int_`)** — 業務邏輯的核心所在。此層負責計算 RFM 分數 (`int_rfm_scores`)、留存同期群特徵 (`int_cohort_base`) 以及 LTV 訓練特徵 (`int_ltv_training_features`)。將邏輯獨立於此層可確保模型的複用性與可測試性。
-
-- **Marts (`mart_`)** — 直接面向商業應用的資料表：例如 `mart_c360_table` (客戶全視角畫像)、`mart_cart_abandonment_list` (購物車遺棄名單) 以及 `mart_business_recommendations` (商業建議)。這是 CRM 與行銷團隊真正查詢的對象。
-
-這種分層設計確保了原始數據的變動不會對最終報表造成不可預測的連鎖反應，且每個轉換步驟都是可獨立審計的。
-
----
-
-## 機器學習應用 (Machine Learning Applications)
-
-**LTV 價值預測 (BigQuery ML)**
-利用客戶的 RFM 特徵與歷史購買行為，透過回歸模型預測每位客戶未來 90 天的預期營收。預測結果直接驅動預算分配邏輯：高 LTV 客戶將獲得高成本的留存服務；低 LTV 客戶則導入低成本的自動化溝通流程。
-
-**NLP 情緒分析 (Python / VADER)**
-透過 `sentiment_analysis_to_bq.ipynb` 處理客戶評論，萃取情緒標籤與產品痛點。系統會將帶有負面情緒的高價值客戶標記為客服優先處理個案，在客戶真正流失前捕捉危險訊號。
+### 2. 機器學習與 AI 應用
+* **LTV 價值預測 (BigQuery ML)**：利用客戶的 RFM 特徵與歷史購買行為，透過回歸模型預測每位客戶未來 90 天的預期營收。預測結果直接驅動預算分配邏輯：高 LTV 客戶將獲得高成本的留存服務，低 LTV 客戶則導入低成本的自動化溝通流程。
+* **NLP 情緒分析 (Python / VADER)**：處理客戶評論，萃取情緒標籤與產品痛點。系統會將帶有負面情緒的高價值客戶標記為客服優先處理個案，在客戶真正流失前捕捉危險訊號。
 
 ---
 
-## 主要產出 (Key Deliverables)
+## 🔒 企業級工程實踐 (Enterprise Engineering Practices)
 
-| 產出項目 | 解決的商業問題 |
-|---|---|
-| **C360 Table** (RFM 分群) | 誰是我的 VVIP 客戶？誰又是正在流失的沉睡客？ |
-| **同期群分析 (Cohort Analysis)** | 上一季獲取的新客，長期來看真的是高品質客戶嗎？ |
-| **LTV 價值預測** | 哪些客戶值得在未來 90 天內重點投資？ |
-| **商業建議清單** | CRM 團隊「今天」該聯繫誰？該給他們什麼優惠？ |
-| **CRM Agent 報告** | 為團隊主管自動產出的每日繁體中文摘要報告 |
+### 1. PII 安全防護與資料集權限控制 (Data Privacy & IAM)
+* **PII 去識別化**：[stg_users.sql](ecommerce_dbt/models/staging/stg_users.sql) 直接剔除明文 Email，僅在獨立的 [stg_users_hashed.sql](ecommerce_dbt/models/staging/stg_users_hashed.sql) 中，將 Email 經由標準化後進行 **SHA-256** 雜湊（`to_hex(sha256(...))`）保存，供第三方廣告投放（Lookalike）安全匹配。
+* **精細化 IAM 權限控管 (GCP BigQuery)**：
+  - **`raw_ecommerce` (Raw 層)**：僅限數據工程師與 dbt 唯讀 (`dataViewer`)，防止原始數據被意外修改。
+  - **`dbt_ecommerce_staging` / `intermediate` (半成品層)**：僅限 dbt 執行服務帳戶 (`dataEditor`) 讀寫，對一般分析師與行銷團隊**完全鎖定**，避免串接錯誤數據或旁路讀取敏感欄位。
+  - **`dbt_ecommerce_marts` (業務產出層)**：分析師與行銷團隊僅授予 `dataViewer` (唯讀)，確保決策報表的高效與一致性（Single Source of Truth）。
 
-`mart_business_recommendations` 資料表會計算出一個「優先級分數」(`priority_score` = LTV × Churn Risk)，自動篩選出每日最需要關注的前 100 名帳戶，消除 CRM 團隊在分配工作時的疑慮。
+### 2. 現代化 CI/CD 與 Slim CI
+* **Workload Identity Federation (WIF)**：整合 GitHub Actions 與 GCP，採用動態 OIDC 短期 Token 進行**無金鑰驗證 (Keyless Authentication)**，杜絕長期 Service Account JSON 金鑰外洩風險。相關基礎設施定義於 [cicd.tf](terraform/cicd.tf)。
+* **dbt Slim CI (狀態比對測試)**：當 PR 提交時，CI 管道 ([dbt_ci.yml](.github/workflows/dbt_ci.yml)) 自動下載 Production 的 `manifest.json`，**僅針對有變動的 Model 及其下游**在臨時資料集（`ci_pr_<pr_num>`）中執行 `dbt build --select state:modified+`，大幅降低 BigQuery 運算成本並縮短 CI 流程。
+* **靜態代碼檢查 (Linting)**：整合 `ruff` (Python) 與 `sqlfluff` (SQL) 進行代碼語法與風格排版靜態檢查。
+
+### 3. 生產級 Airflow 自動化調度與無成本監控 (Airflow Orchestration)
+* **調度策略**：每日凌晨 01:00 (台北時間) 自動執行，DAG 設計見 [ecommerce_dbt_dag.py](airflow/dags/ecommerce_dbt_dag.py)。設有 3 次自動重試與任務失敗即時警報機制（`on_failure_callback`），出錯時自動向運維團隊寄送精美 HTML 報錯信件。
+* **零查詢成本監控日報 (Zero-Query-Cost)**：在 dbt 流程執行完畢後，Airflow 會直接解析本地生成的 `run_results.json` 狀態檔案進行報表編譯並發送 Email/Slack，**完全無需對 BigQuery 進行二次查詢，從而達到零成本的日常監控**。
+
+### 4. 雲端生產部署藍圖 (Kubernetes & IaC)
+* **Terraform IaC**：定義於 [gke.tf](deploy/terraform/gke.tf)，一鍵在 GCP 佈署專屬 VPC 網路與自動彈性縮放（1-5 節點）的 GKE 叢集。
+* **Kubernetes 容器編排**：
+  - **Airflow KubernetesExecutor**：啟用任務級 Pod 動態縮放，並使用 `git-sync` 每 60 秒自動從 GitHub 同步 DAG 代碼，無須重構 Docker 映像檔。
+  - **Strimzi Kafka Operator**：一鍵部署 3 節點的 Kafka 與 Zookeeper 高可用叢集。
+  - **Postgres PVC**：使用 PersistentVolumeClaim 動態申請 GCP 雲端儲存，確保資料庫持久化。
 
 ---
 
-## 專案結構 (Project Structure)
+## 📊 主要產出與商業應用 (Key Deliverables)
+
+| 產出項目 | 解決的商業問題 | 核心應用場景 |
+|---|---|---|
+| **C360 Table** | 誰是我們的 VVIP 客戶？誰又是正在流失的沉睡客？ | 提供 CRM 團隊全視角客戶畫像與 RFM 分群，進行分眾行銷。 |
+| **同期群分析 (Cohort Analysis)** | 上一季獲取的新客，長期來看真的是高品質客戶嗎？ | 評估不同時間段獲客的留存曲線，優化獲客預算。 |
+| **LTV 價值預測** | 哪些客戶值得在未來 90 天內重點投資？ | 將行銷預算優先分配給高 LTV 客戶；對低 LTV 客戶實施自動化留存。 |
+| **商業建議清單** | CRM 團隊「今天」該聯繫誰？該給他們什麼優惠？ | 依優先級分數 (`LTV × Churn Risk`) 篩選出每日最需關注的前 100 名帳戶。 |
+| **CRM Agent 報告** | 如何快速向團隊主管彙整每日業務狀況？ | 為團隊主管自動產出的每日繁體中文數據摘要報告。 |
+
+---
+
+## 📂 專案目錄結構 (Project Structure)
 
 ```
 /data               # 原始 CSV 數據集
 /ecommerce_dbt      # 所有的 dbt 模型 (staging / intermediate / marts)
 /scripts            # Python 數據導入與預處理腳本
-/ipynb              # LTV 建模與情緒分析的 Notebooks
+/ipynb              # LTV 建模與情緒分析的 Jupyter Notebooks
 /agents             # CRM AI 代理人邏輯
-/memo               # 架構設計文件與規劃筆記
+/deploy             # 雲端生產環境部署藍圖 (Terraform & Kubernetes Manifests)
+/memo               # 架構設計文件、規劃筆記與詳細部署指引
 /dashboard_preview  # 儀表板版面草案 (高層概覽、分群分析)
 ```
 
 ---
 
-## 開發階段 (Development Phases)
+## ⚡ 本地快速啟動指引 (Local Quick Start)
 
-專案按成熟度分為五個階段執行：
+本專案支援兩種本地數據基礎設施啟動方式：
 
-1. **階段 1** — RFM 分群 + 情緒標籤 → C360 Table
-2. **階段 2** — 購物車遺棄 + 流失風險行動名單
-3. **階段 3** — LTV 預測模型 + 預算分配邏輯
-4. **階段 4** — 留存同期群分析 + 交叉銷售關聯規則
-5. **階段 5** — 決策引擎整合所有訊號 → 最終商業建議名單
+### 方案 A：使用 Docker Compose (預設、最輕量)
 
----
-
-## 資料隱私與安全防護 (Data Privacy & Security)
-
-本專案在設計數據倉庫時，遵循 **最小權限原則 (Principle of Least Privilege)** 與 **隱私合規規範 (Privacy Compliance)**，特別針對敏感的用戶資料（PII）以及各資料分層的權限存取進行嚴格管控。
-
-### 1. 使用者敏感資訊處理 (PII Data Protection)
-* **移除原始 Email**：為避免敏感的 PII（個人識別資訊）在數據分析與建模過程中外洩，我們已在基礎 Staging 模型 [stg_users.sql](ecommerce_dbt/models/staging/stg_users.sql) 的查詢中，將明文 `email` 欄位**完全移除**。
-* **獨立雜湊處理 (Secure Hashing)**：行銷或推薦平台（如 Facebook Ads、Google Ads）在進行廣告投放或 Lookalike 分眾比對時，通常需要 Email 作為比對種子。為此，我們建立了獨立的 [stg_users_hashed.sql](ecommerce_dbt/models/staging/stg_users_hashed.sql) 模型：
-  - 使用 `lower(trim(email))` 對 Email 進行標準化處理。
-  - 使用安全強度極高的 **SHA-256** 演算法進行雜湊，並轉換為 16 進位字串（`to_hex(sha256(...))`）保存。
-  - 此雜湊過程不可逆，既能滿足行銷匹配需求，又確保了使用者隱私安全。
-* **最終行銷輸出**：行銷團隊專屬的 [mart_lookalike_hashed_email.sql](ecommerce_dbt/models/marts/marketing/mart_lookalike_hashed_email.sql) 模型僅合併 `hashed_email` 與預測標籤，供行銷團隊安全匯出投放。
-
-### 2. 資料集層級權限控制 (GCP BigQuery IAM)
-我們使用 **Terraform** 對 BigQuery 內的各資料集（Datasets）進行精細化權限控管，防範資料誤用與越權存取：
-
-* **Raw 資料集 (`raw_ecommerce`)**：
-  * **權限級別**：`roles/bigquery.dataViewer` (唯讀)
-  * **存取對象**：僅開放給 dbt 執行用的 Service Account 與數據工程人員。防止原始數據被意外修改或刪除。
-* **中間/半成品資料集 (`dbt_ecommerce_staging`, `dbt_ecommerce_intermediate`)**：
-  * **權限級別**：`roles/bigquery.dataEditor` (編輯/寫入)
-  * **存取對象**：**僅限 dbt 執行用的 Service Account**，對一般分析師與行銷團隊**完全鎖定**。
-  * **防護目的**：Staging 與 Intermediate 包含大量的 View（視圖）與半成品，鎖定這兩層能防範使用者串接錯誤的中間資料、防止 BigQuery 重複執行視圖運算導致的高昂成本，並確保敏感欄位不被旁路讀取。
-* **業務產出層 (`dbt_ecommerce_marts`)**：
-  * **權限級別**：dbt Service Account 擁有 `dataEditor` 進行寫入更新；數據分析師與行銷團隊僅授予 `dataViewer` (唯讀權限)。
-  * **防護目的**：使用者僅能存取已清洗、聚合且經過隱私脫敏的 Marts 表，確保決策報表的高效與一致性。
-
----
-
-## CI/CD 流程設計與自動化部署 (CI/CD Pipeline & Automated Deployment)
-
-本專案採用 **GitHub Actions** 與 **GCP (Google Cloud Platform)** 整合，建構了安全的數據開發管道與自動化部署流程。
-
-### 1. 安全驗證與權限控管 (GCP Workload Identity Federation)
-為確保安全性，我們不使用傳統且具安全風險的長期 Service Account JSON 金鑰。
-* **無金鑰驗證 (Keyless Authentication)**：透過 GCP **Workload Identity Federation (WIF)**，GitHub Actions 在執行時會動態向 GCP 請求短期的 OIDC Token 進行驗證。
-* **來源限制**：僅限定本 GitHub 專案 (`PoChaoWang/Ecommerce-Customer-Intelligence-Predictive-Growth-Suite`) 能夠扮演執行 BigQuery 運作與 GCS 讀寫的 Service Account (`ecommerce-dataset`)。相關基礎設施定義於 [terraform/cicd.tf](ecommerce_dataset/terraform/cicd.tf)。
-
-### 2. 持續整合流程 (Continuous Integration - PR Trigger)
-當開發人員向 `main` 分支提交 Pull Request (PR) 時，CI 管道 [.github/workflows/dbt_ci.yml](ecommerce_dataset/.github/workflows/dbt_ci.yml) 會自動觸發並執行以下流程：
-* **程式碼檢查 (Linting & Formatting)**：
-  - 使用 **`ruff`** 快速檢查並排版 `scripts/` 與 `agents/` 目錄下的 Python 檔案。
-  - 使用 **`sqlfluff`** (搭配 dbt 解析器與 [.sqlfluff](ecommerce_dataset/.sqlfluff) 設定) 靜態檢查 `models/` 目錄下的 SQL 程式碼風格與語法標準。
-* **快速靜態驗證 (`dbt parse`)**：
-  - 無需建立資料庫連線，快速解析 `dbt_project.yml` 與各 `schema.yml` 設定，以最快速度抓出關聯錯誤或設定語法錯誤。
-* **狀態比對測試 (Slim CI)**：
-  - CI 流程會從 GCS Bucket下載 Production 環境的 `manifest.json` 狀態檔。
-  - 使用 dbt 的狀態選擇器與自訂的 [profiles.yml](ecommerce_dataset/ecommerce_dbt/profiles.yml) 進行精準建置：`dbt build --select state:modified+ --defer --state <path>`。
-  - **僅針對有變動的 Model 及其下游受影響的 Model**，在動態建立的臨時資料集（`ci_pr_<pr_number>`）中進行建置與資料品質測試 (`dbt test`)。這大幅降低了 BigQuery 運算成本，並將 CI 執行時間縮短至最低。
-
-### 3. 持續部署流程 (Continuous Deployment - Merge/Push to Main)
-當 PR 被合併至 `main` 分支時，CD 管道 [.github/workflows/dbt_cd.yml](ecommerce_dataset/.github/workflows/dbt_cd.yml) 會自動啟動：
-* **Production 部署**：直接在 GitHub Runner 上執行 `dbt build --target prod`，將所有更新的 Model 建置於生產環境。
-* **狀態產物保存**：成功部署後，將編譯生成的最新 `manifest.json` 上傳至 GCS Bucket。此檔案將作為未來新 PR 進行 Slim CI 比對時的最新狀態基準。
-
-### 4. 基礎設施即程式碼 (Terraform 部署)
-與 CI/CD 相關的所有 GCP 資源（如 GCS Bucket、WIF Pool 與 Provider、IAM 綁定等）皆定義於 [terraform/cicd.tf](ecommerce_dataset/terraform/cicd.tf) 中。
-如需更新或重新建立 CI/CD 基礎設施，請在 `terraform` 目錄下執行：
-```bash
-terraform plan
-terraform apply
-```
-
----
-
-## Airflow 數據調度與日常自動化報告 (Airflow Orchestration & Automated Daily Reports)
-
-本專案使用 **Apache Airflow** 進行日常的數據管道調度與維護。整個調度工作流定義於 [ecommerce_dbt_dag.py](ecommerce_dataset/airflow/dags/ecommerce_dbt_dag.py)，主要負責驅動日常的 dbt 建模流程，並在執行完畢後自動解析執行狀態，向工程與業務團隊發送摘要報告。
-
-### 1. 工作流設計與調度策略 (DAG Design & Scheduling)
-* **調度頻率**：每日凌晨 01:00 (台北時間 `Asia/Taipei`) 執行一次。
-* **重試機制**：設有 3 次自動重試，每次重試間隔 5 分鐘，以應對短暫的網路波動或 GCP 服務瞬時異常。
-* **無狀態與動態配置**：DAG 中完全不硬編碼 (hardcode) GCP 專案 ID、工作目錄或通知信箱。所有配置如 `DBT_PROJECT`、`DBT_PROJECT_DIR` 等均直接由環境變數動態注入。
-* **任務失敗即時警報 (Task Failure Callback)**：特別實作了 `on_failure_callback` 機制。若工作流中的任何一個前置任務（如連線測試 `dbt_debug`、套件安裝 `dbt_deps` 或主要建置 `dbt_build`）失敗，系統會立即透過自訂的 `task_failure_alert` 函式建構精美的 HTML 警報信件（包含詳細 Exception 錯誤訊息與 Airflow Log 連結），並支援 Slack 與 MS Teams Webhook 的即時推播，確保運維人員能在第一時間收到異常通知。
-
-### 2. 工作流步驟說明 (DAG Tasks Flow)
-工作流包含四個核心步驟，循序執行：
-1. **`dbt_debug` (BashOperator)**：在執行轉換前，先執行 `dbt debug --target prod` 驗證 BigQuery 連線與 Profile 設定是否正常，確保管道健康。
-2. **`dbt_deps` (BashOperator)**：執行 `dbt deps` 以安裝/更新 [packages.yml](ecommerce_dataset/ecommerce_dbt/packages.yml) 中定義的 dbt 外部套件，確保模型依賴完整。
-3. **`dbt_build` (BashOperator)**：執行 `dbt build --target prod`。此指令會一次性執行所有模型的編譯、資料表建置 (Seed/Run)、單元測試 (Test) 與快照 (Snapshot)，若有任何模型建置失敗或測試未通過，工作流將在此步驟中斷並觸發重試。
-4. **`send_daily_report` (PythonOperator)**：在 dbt 流程執行完畢後，自動彙整結果並發送通知報告。
-
-### 3. 日常無成本監控報告 (Zero-Cost Daily Monitoring & Alerts)
-為了避免因為監控而產生額外的 BigQuery 查詢費用，`send_daily_report` 採用了**無成本 (Zero-Query-Cost) 設計**（直接讀取由 `dbt build` 執行完畢後在本地產生的 `run_results.json` 狀態檔案進行解析）：
-* **運作與通知邏輯**：
-  - **正常流程**：`dbt_debug` ➡️ `dbt_deps` ➡️ `dbt_build` 全部成功運作後，執行 `send_daily_report` 寄出包含每個 model 執行細節、狀態與處理行數的完整日報。
-  - **異常處理**：任何步驟發生異常（如 `dbt_debug` 的連線失敗，或 `dbt_deps` 安裝錯誤），工作流即會中斷，並立即觸發 `task_failure_alert`，寄出錯誤警報信（內含詳細報錯和排查 logs 連結），而不會默默地無聲卡死。
-* **多元通知管道**：
-  - **Email 通知（已啟用）**：自動將上述解析結果編譯為美觀的 HTML 表格發送至指定的 `ALERT_EMAIL`。
-  - **Slack / MS Teams 整合（已預留模版）**：程式碼中已內建 Slack 專用 `SlackWebhookOperator` 與 Teams 專用 `SimpleHttpOperator` 的 Payload 建構邏輯，只需在 Airflow 中設定對應的 Connection 並開啟開關即可隨時啟用。
-
----
-
-## 雲端生產環境 Kubernetes 部署藍圖 (Cloud Production Kubernetes Deployment Blueprint)
-
-為了展示系統上雲的架構擴展性，本專案提供了一套基於 **Google Kubernetes Engine (GKE)** 的容器編排部署藍圖。此設定能確保數據管線在雲端具備高可用性、自動伸縮與容錯能力，且**完全不需修改核心 Python 程式碼**。
-
-相關部署配置檔案皆存放於專案 [deploy/](ecommerce_dataset/deploy/) 目錄下：
-
-### 1. 雲端基礎設施 (Terraform - IaC)
-在 [deploy/terraform/](ecommerce_dataset/deploy/terraform/) 中，使用 Terraform 聲明式定義了雲端基礎架構：
-* **`gke.tf`**：建立專屬的 VPC 網路（啟用 VPC-Native 模式），並配置一個自動縮放（Auto-scaling，1 到 5 個節點）的 GKE 叢集，節點規格採用 `e2-standard-2` (2 vCPU, 8GB RAM)，符合高可用性配置。
-* **`variables.tf` / `outputs.tf`**：提供靈活的參數化設定，並在部署完成後自動輸出 `kubectl` 的集群連線指令。
-
-### 2. 容器編排部署 (Kubernetes Manifests)
-在 [deploy/k8s/](ecommerce_dataset/deploy/k8s/) 中，包含了服務上雲的 Kubernetes 設定檔：
-* **`postgres.yaml`**：部署後端元資料庫，透過 `PersistentVolumeClaim (PVC)` 向 GCP 雲端硬碟動態申請 10GB 儲存空間，保證資料持久化。
-* **`kafka.yaml`**：使用 K8s 官方的 **Strimzi Kafka Operator**，在集群內一鍵拉起 3 節點的 Kafka 與 Zookeeper 高可用集群，並自動建立 `orders` 與 `behavior` 兩個 Topic。
-* **`airflow-values.yaml`**：Airflow Helm Chart 自訂設定檔。啟用 K8s 原生的 **`KubernetesExecutor`**（每個 Airflow 任務動態開一個獨立 Pod，執行完即關閉，極大節省計算成本），並整合了 **`git-sync`**（每 60 秒自動從 GitHub 同步 DAG 代碼，修改 DAG 無需重新編譯 Docker 映像檔）。
-* **`kafka-producer.yaml` / `spark-consumer.yaml`**：將 Python 模擬數據生產者與 PySpark 串流消費者包裝為 K8s Deployment。消費者內部使用 K8s Secret 來安全地加載 Google Cloud 金鑰。
-
-> [!NOTE]
-> 此目錄為雲端部署的「架構藍圖」，供技術評估與架構設計參考，本地開發與日常調試仍建議使用更輕量、免費的 Docker Compose 本地運行方案。
-
----
-
-## 本地即時串流環境部署與執行指引 (Local Streaming Setup & Execution Guide)
-
-本專案支援完整的實時數據串流管道模擬，以下是本地環境部署與執行的完整步驟：
-
-### 1. 安裝本地 Python 依賴與 PySpark 運行環境
-本專案的 Spark 串流消費者需要 **Java 17 或 Java 11** 的支持，請先確保本地已安裝 Java。
-接著，在虛擬環境中安裝 Python 套件：
-```bash
-# 激活您的虛擬環境後執行
-pip install -r requirements.txt
-```
-
-### 2. 啟動基礎設施環境（二選一）
-
-您可以選擇使用 Docker Compose 啟動傳統容器，或是使用 Kubernetes 部署本機的數據庫與 Kafka 叢集。
-
-#### 方案 A：使用 Docker Compose（預設、最輕量）
-確保本地 Docker Desktop 已啟動，並在專案根目錄下運行：
-```bash
-# 啟動 Zookeeper, Kafka Broker 與 Kafka UI 監控網頁
-docker compose up -d
-```
-*   **Kafka UI 網頁**: 可開啟瀏覽器訪問 **[http://localhost:8085](http://localhost:8085)** 觀察即時 Topic 與 Message。
-*   *備註：此方案預設將 Kafka 連線暴露在 `localhost:9092`。*
-
-#### 方案 B：使用 Kubernetes（進階、體驗本地 K8s 部署）
-若您想在本機 Mac 上體驗 Kubernetes 運作，可使用 Docker Desktop 內建的 K8s 跑起基礎設施：
-1. **開啟 Docker Desktop K8s**：點擊 Settings (齒輪) ➡️ Kubernetes ➡️ 勾選 **Enable Kubernetes** ➡️ Apply & restart。
-2. **安裝 Strimzi Kafka Operator (K8s 管理員)**：
+1. **啟動基礎設施** (Zookeeper, Kafka, Kafka UI):
    ```bash
-   kubectl create -f 'https://strimzi.io/install/latest?namespace=default'
-   # 確保 strimzi-cluster-operator-xxx Pod 處於 Running 狀態後繼續
+   # 啟動容器服務
+   docker compose up -d
    ```
-3. **一鍵部署 Postgres 與 Kafka 叢集 (KRaft 模式)**：
+   *可開啟瀏覽器訪問 [http://localhost:8085](http://localhost:8085) 監控 Kafka 即時訊息與 Topic。*
+2. **數據初始化與補齊** (自動補足歷史斷層至昨天):
    ```bash
-   # 部署資料庫與儲存卷 (PVC)
+   python scripts/run_gap_filler.py --action gap-fill
+   ```
+3. **執行即時串流管道** (請開啟兩個終端機視窗執行):
+   * **終端機 1 (模擬數據生產者)**:
+     ```bash
+     python scripts/run_kafka_producer.py --delay 1.0
+     ```
+   * **終端機 2 (PySpark 串流消費者，寫入 BigQuery)**:
+     ```bash
+     python scripts/spark_bigquery_consumer.py
+     ```
+
+### 方案 B：使用 Kubernetes (本地 K8s 部署)
+
+1. **一鍵部署 Postgres 與 Kafka 叢集**:
+   ```bash
+   # 部署資料庫與 PVC 儲存卷
    kubectl apply -f deploy/k8s/postgres.yaml
-   # 部署 1-Node KRaft Kafka 叢集與 Topics (自動映射 30094 & 30095 NodePort 外部端口)
+   # 部署 1-Node KRaft Kafka 叢集與 Topics (將對外暴露 NodePort 30094 & 30095)
    kubectl apply -f deploy/k8s/kafka.yaml
-   # 觀察進度直到所有 Pod 皆為 Running / Ready 狀態
-   kubectl get pods -w
    ```
-*   *備註：此方案預設將 Kafka 外部 Bootstrap 連線暴露在 `localhost:30094`。*
+2. **數據初始化與補齊**:
+   ```bash
+   python scripts/run_gap_filler.py --action gap-fill
+   ```
+3. **執行即時串流管道 (指定 K8s Kafka Port)** (請開啟兩個終端機視窗執行):
+   * **終端機 1 (模擬數據生產者)**:
+     ```bash
+     KAFKA_BOOTSTRAP_SERVERS="localhost:30094" python scripts/run_kafka_producer.py --delay 1.0
+     ```
+   * **終端機 2 (PySpark 串流消費者，寫入 BigQuery)**:
+     ```bash
+     KAFKA_BOOTSTRAP_SERVERS="localhost:30094" python scripts/spark_bigquery_consumer.py
+     ```
+
+⚠️ **注意**：若在方案 A 與方案 B 之間切換，請務必先執行 `rm -rf spark_checkpoints` 刪除舊的 Spark Offset 快取，避免因 Kafka 叢集重置導致 Offset 不一致而報錯。
 
 ---
 
-### 3. 資料初始化與歷史補齊 (選填)
-若要清空測試數據，並自動補齊從原 Kaggle 最後更新日到昨天為止的歷史空缺：
-```bash
-# 一鍵還原/重置本地 CSV 至 Kaggle 原始狀態
-python scripts/run_gap_filler.py --action reset
-
-# 增量自動補齊歷史斷層（至昨天為止）
-python scripts/run_gap_filler.py --action gap-fill
-```
-
----
-
-### 4. 執行即時串流管道
-請開啟兩個終端機視窗，分別啟動生產者與消費者。
-
-> [!WARNING]
-> **切換方案注意事項**：當您在 **方案 A (Docker)** 與 **方案 B (K8s)** 之間切換時，請務必先執行 **`rm -rf spark_checkpoints`** 刪除舊的 Spark Offset 快取，避免因 Kafka 叢集重置導致 Offset 不一致而報錯。
-
-#### 如果您使用的是 方案 A (Docker Compose)
-*   **終端機 1 - 啟動 Kafka 實時模擬生產者**：
-    ```bash
-    python scripts/run_kafka_producer.py --delay 1.0
-    ```
-*   **終端機 2 - 啟動 Spark Structured Streaming 消費者**：
-    ```bash
-    python scripts/spark_bigquery_consumer.py
-    ```
-
-#### 如果您使用的是 方案 B (Kubernetes)
-*   **終端機 1 - 啟動 Kafka 實時模擬生產者**：
-    ```bash
-    KAFKA_BOOTSTRAP_SERVERS="localhost:30094" python scripts/run_kafka_producer.py --delay 1.0
-    ```
-*   **終端機 2 - 啟動 Spark Structured Streaming 消費者**：
-    ```bash
-    KAFKA_BOOTSTRAP_SERVERS="localhost:30094" python scripts/spark_bigquery_consumer.py
-    ```
-
-*(欲中止發送或消費，直接在各自的終端機按下 `Ctrl + C` 即可。)*
-
----
-
-*本專案作為個人作品集，展示了在商業環境中端到端數據工程與機器學習的應用能力。*
+*本專案作為個人作品集，展示了在商業環境中端到端數據工程、運維工程 (Platform/DataOps) 與機器學習的整合實踐能力。*
