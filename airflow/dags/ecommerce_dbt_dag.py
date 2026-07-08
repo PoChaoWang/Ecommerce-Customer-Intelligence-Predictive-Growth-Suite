@@ -283,7 +283,7 @@ with DAG(
     dag_id="ecommerce_dbt_daily_run",
     default_args=default_args,
     description="Daily execution of dbt transformation (Raw to Business Models) at 1:00 AM local time",
-    schedule_interval="0 1 * * *",  # Run daily at 01:00 AM (Taipei Time)
+    schedule="0 1 * * *",  # Run daily at 01:00 AM (Taipei Time)
     start_date=datetime(2026, 7, 1, tzinfo=local_tz),
     catchup=False,
     tags=["dbt", "ecommerce", "production"],
@@ -326,7 +326,6 @@ with DAG(
     send_report = PythonOperator(
         task_id="send_daily_report",
         python_callable=parse_dbt_results_and_notify,
-        provide_context=True,
     )
 
     # Define task dependencies
