@@ -20,8 +20,14 @@ class TestDagIntegrity(unittest.TestCase):
         # Ensure we point to the correct DAGs directory relative to this file
         dag_dir = os.path.join(os.path.dirname(__file__), "..", "airflow", "dags")
 
-        # Load the DAGs
-        dagbag = DagBag(dag_folder=dag_dir, include_examples=False)
+        # Load the DAGs (handling Airflow 2.x and 3.x parameter changes dynamically)
+        import inspect
+
+        sig = inspect.signature(DagBag.__init__)
+        kwargs = {"dag_folder": dag_dir}
+        if "include_examples" in sig.parameters:
+            kwargs["include_examples"] = False
+        dagbag = DagBag(**kwargs)
 
         # Check for import errors
         import_errors = dagbag.import_errors
