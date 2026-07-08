@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # ==================== Existing Streaming Stack ====================
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     container_name: ecommerce-zookeeper
@@ -39,3 +40,85 @@ services:
       DYNAMIC_CONFIG_ENABLED: 'true'
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+
+  # ==================== Airflow & dbt Stack ====================
+  postgres:
+    image: postgres:13
+    container_name: ecommerce-postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow_password
+      POSTGRES_DB: airflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  airflow-init:
+    build:
+      context: .
+      dockerfile: ./airflow/Dockerfile
+    container_name: ecommerce-airflow-init
+    depends_on:
+      - postgres
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow_password@postgres/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+    command: bash -c "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com"
+
+  airflow-webserver:
+    build:
+      context: .
+      dockerfile: ./airflow/Dockerfile
+    container_name: ecommerce-airflow-webserver
+    restart: always
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow_password@postgres/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__TIMEZONE: Asia/Taipei
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: Asia/Taipei
+      GOOGLE_APPLICATION_CREDENTIALS: /opt/airflow/gcp_key.json
+      DBT_PROJECT_DIR: /opt/airflow/dbt/ecommerce_dbt
+      DBT_PROFILES_DIR: /opt/airflow/dbt/ecommerce_dbt
+      DBT_PROJECT: ${PROJECT_ID}
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./ecommerce_dbt:/opt/airflow/dbt/ecommerce_dbt
+      - ./${SERVICE_ACCOUNT_JSON}:/opt/airflow/gcp_key.json:ro
+    command: webserver
+
+  airflow-scheduler:
+    build:
+      context: .
+      dockerfile: ./airflow/Dockerfile
+    container_name: ecommerce-airflow-scheduler
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow_password@postgres/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__TIMEZONE: Asia/Taipei
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: Asia/Taipei
+      GOOGLE_APPLICATION_CREDENTIALS: /opt/airflow/gcp_key.json
+      DBT_PROJECT_DIR: /opt/airflow/dbt/ecommerce_dbt
+      DBT_PROFILES_DIR: /opt/airflow/dbt/ecommerce_dbt
+      DBT_PROJECT: ${PROJECT_ID}
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./ecommerce_dbt:/opt/airflow/dbt/ecommerce_dbt
+      - ./${SERVICE_ACCOUNT_JSON}:/opt/airflow/gcp_key.json:ro
+    command: scheduler
+
+volumes:
+  postgres_data:

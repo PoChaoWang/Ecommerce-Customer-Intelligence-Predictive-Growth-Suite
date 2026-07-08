@@ -186,6 +186,34 @@ terraform apply
 
 ---
 
+## Airflow 數據調度與日常自動化報告 (Airflow Orchestration & Automated Daily Reports)
+
+本專案使用 **Apache Airflow** 進行日常的數據管道調度與維護。整個調度工作流定義於 [ecommerce_dbt_dag.py](ecommerce_dataset/airflow/dags/ecommerce_dbt_dag.py)，主要負責驅動日常的 dbt 建模流程，並在執行完畢後自動解析執行狀態，向工程與業務團隊發送摘要報告。
+
+### 1. 工作流設計與調度策略 (DAG Design & Scheduling)
+* **調度頻率**：每日凌晨 01:00 (台北時間 `Asia/Taipei`) 執行一次。
+* **重試機制**：設有 3 次自動重試，每次重試間隔 5 分鐘，以應對短暫的網路波動或 GCP 服務瞬時異常。
+* **無狀態與動態配置**：DAG 中完全不硬編碼 (hardcode) GCP 專案 ID、工作目錄或通知信箱。所有配置如 `DBT_PROJECT`、`DBT_PROJECT_DIR` 等均直接由環境變數動態注入。
+* **任務失敗即時警報 (Task Failure Callback)**：特別實作了 `on_failure_callback` 機制。若工作流中的任何一個前置任務（如連線測試 `dbt_debug`、套件安裝 `dbt_deps` 或主要建置 `dbt_build`）失敗，系統會立即透過自訂的 `task_failure_alert` 函式建構精美的 HTML 警報信件（包含詳細 Exception 錯誤訊息與 Airflow Log 連結），並支援 Slack 與 MS Teams Webhook 的即時推播，確保運維人員能在第一時間收到異常通知。
+
+### 2. 工作流步驟說明 (DAG Tasks Flow)
+工作流包含四個核心步驟，循序執行：
+1. **`dbt_debug` (BashOperator)**：在執行轉換前，先執行 `dbt debug --target prod` 驗證 BigQuery 連線與 Profile 設定是否正常，確保管道健康。
+2. **`dbt_deps` (BashOperator)**：執行 `dbt deps` 以安裝/更新 [packages.yml](ecommerce_dataset/ecommerce_dbt/packages.yml) 中定義的 dbt 外部套件，確保模型依賴完整。
+3. **`dbt_build` (BashOperator)**：執行 `dbt build --target prod`。此指令會一次性執行所有模型的編譯、資料表建置 (Seed/Run)、單元測試 (Test) 與快照 (Snapshot)，若有任何模型建置失敗或測試未通過，工作流將在此步驟中斷並觸發重試。
+4. **`send_daily_report` (PythonOperator)**：在 dbt 流程執行完畢後，自動彙整結果並發送通知報告。
+
+### 3. 日常無成本監控報告 (Zero-Cost Daily Monitoring & Alerts)
+為了避免因為監控而產生額外的 BigQuery 查詢費用，`send_daily_report` 採用了**無成本 (Zero-Query-Cost) 設計**（直接讀取由 `dbt build` 執行完畢後在本地產生的 `run_results.json` 狀態檔案進行解析）：
+* **運作與通知邏輯**：
+  - **正常流程**：`dbt_debug` ➡️ `dbt_deps` ➡️ `dbt_build` 全部成功運作後，執行 `send_daily_report` 寄出包含每個 model 執行細節、狀態與處理行數的完整日報。
+  - **異常處理**：任何步驟發生異常（如 `dbt_debug` 的連線失敗，或 `dbt_deps` 安裝錯誤），工作流即會中斷，並立即觸發 `task_failure_alert`，寄出錯誤警報信（內含詳細報錯和排查 logs 連結），而不會默默地無聲卡死。
+* **多元通知管道**：
+  - **Email 通知（已啟用）**：自動將上述解析結果編譯為美觀的 HTML 表格發送至指定的 `ALERT_EMAIL`。
+  - **Slack / MS Teams 整合（已預留模版）**：程式碼中已內建 Slack 專用 `SlackWebhookOperator` 與 Teams 專用 `SimpleHttpOperator` 的 Payload 建構邏輯，只需在 Airflow 中設定對應的 Connection 並開啟開關即可隨時啟用。
+
+---
+
 ## 本地即時串流環境部署與執行指引 (Local Streaming Setup & Execution Guide)
 
 本專案支援完整的實時數據串流管道模擬，以下是本地環境部署與執行的完整步驟：
