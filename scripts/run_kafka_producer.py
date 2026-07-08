@@ -1,3 +1,4 @@
+import os
 import sys
 import json
 import random
@@ -22,6 +23,7 @@ def start_streaming(generator, bootstrap_servers, delay):
             bootstrap_servers=bootstrap_servers,
             value_serializer=lambda v: json.dumps(v).encode("utf-8"),
             max_block_ms=5000,
+            api_version=(3, 0, 0),
         )
         print("✅ Connected to Kafka successfully!")
     except Exception as e:
@@ -124,8 +126,8 @@ def main():
     parser = argparse.ArgumentParser(description="E-Commerce Real-time Kafka Producer")
     parser.add_argument(
         "--bootstrap-servers",
-        default="localhost:9092",
-        help="Kafka bootstrap servers (default: localhost:9092)",
+        default=os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"),
+        help="Kafka bootstrap servers (default: env KAFKA_BOOTSTRAP_SERVERS or localhost:9092)",
     )
     parser.add_argument(
         "--delay",

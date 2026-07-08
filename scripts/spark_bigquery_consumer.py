@@ -117,12 +117,14 @@ def main():
     print("✅ Spark Session initialized successfully.")
 
     # Read from Kafka multi-topic stream
-    print("🔌 Connecting to Kafka broker...")
+    kafka_bootstrap_servers = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+    print(f"🔌 Connecting to Kafka broker at {kafka_bootstrap_servers}...")
     kafka_stream = (
         spark.readStream.format("kafka")
-        .option("kafka.bootstrap.servers", "localhost:9092")
+        .option("kafka.bootstrap.servers", kafka_bootstrap_servers)
         .option("subscribe", "db_users,db_events,db_orders,db_order_items,db_reviews")
         .option("startingOffsets", "latest")
+        .option("failOnDataLoss", "false") # 避免因 Kafka 重建或舊快取導致 Offset 找不到而崩潰
         .load()
     )
 

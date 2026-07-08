@@ -214,6 +214,29 @@ terraform apply
 
 ---
 
+## 雲端生產環境 Kubernetes 部署藍圖 (Cloud Production Kubernetes Deployment Blueprint)
+
+為了展示系統上雲的架構擴展性，本專案提供了一套基於 **Google Kubernetes Engine (GKE)** 的容器編排部署藍圖。此設定能確保數據管線在雲端具備高可用性、自動伸縮與容錯能力，且**完全不需修改核心 Python 程式碼**。
+
+相關部署配置檔案皆存放於專案 [deploy/](ecommerce_dataset/deploy/) 目錄下：
+
+### 1. 雲端基礎設施 (Terraform - IaC)
+在 [deploy/terraform/](ecommerce_dataset/deploy/terraform/) 中，使用 Terraform 聲明式定義了雲端基礎架構：
+* **`gke.tf`**：建立專屬的 VPC 網路（啟用 VPC-Native 模式），並配置一個自動縮放（Auto-scaling，1 到 5 個節點）的 GKE 叢集，節點規格採用 `e2-standard-2` (2 vCPU, 8GB RAM)，符合高可用性配置。
+* **`variables.tf` / `outputs.tf`**：提供靈活的參數化設定，並在部署完成後自動輸出 `kubectl` 的集群連線指令。
+
+### 2. 容器編排部署 (Kubernetes Manifests)
+在 [deploy/k8s/](ecommerce_dataset/deploy/k8s/) 中，包含了服務上雲的 Kubernetes 設定檔：
+* **`postgres.yaml`**：部署後端元資料庫，透過 `PersistentVolumeClaim (PVC)` 向 GCP 雲端硬碟動態申請 10GB 儲存空間，保證資料持久化。
+* **`kafka.yaml`**：使用 K8s 官方的 **Strimzi Kafka Operator**，在集群內一鍵拉起 3 節點的 Kafka 與 Zookeeper 高可用集群，並自動建立 `orders` 與 `behavior` 兩個 Topic。
+* **`airflow-values.yaml`**：Airflow Helm Chart 自訂設定檔。啟用 K8s 原生的 **`KubernetesExecutor`**（每個 Airflow 任務動態開一個獨立 Pod，執行完即關閉，極大節省計算成本），並整合了 **`git-sync`**（每 60 秒自動從 GitHub 同步 DAG 代碼，修改 DAG 無需重新編譯 Docker 映像檔）。
+* **`kafka-producer.yaml` / `spark-consumer.yaml`**：將 Python 模擬數據生產者與 PySpark 串流消費者包裝為 K8s Deployment。消費者內部使用 K8s Secret 來安全地加載 Google Cloud 金鑰。
+
+> [!NOTE]
+> 此目錄為雲端部署的「架構藍圖」，供技術評估與架構設計參考，本地開發與日常調試仍建議使用更輕量、免費的 Docker Compose 本地運行方案。
+
+---
+
 ## 本地即時串流環境部署與執行指引 (Local Streaming Setup & Execution Guide)
 
 本專案支援完整的實時數據串流管道模擬，以下是本地環境部署與執行的完整步驟：
@@ -226,13 +249,39 @@ terraform apply
 pip install -r requirements.txt
 ```
 
-### 2. 啟動 Docker 容器 (Kafka & Kafka UI)
+### 2. 啟動基礎設施環境（二選一）
+
+您可以選擇使用 Docker Compose 啟動傳統容器，或是使用 Kubernetes 部署本機的數據庫與 Kafka 叢集。
+
+#### 方案 A：使用 Docker Compose（預設、最輕量）
 確保本地 Docker Desktop 已啟動，並在專案根目錄下運行：
 ```bash
 # 啟動 Zookeeper, Kafka Broker 與 Kafka UI 監控網頁
 docker compose up -d
 ```
 *   **Kafka UI 網頁**: 可開啟瀏覽器訪問 **[http://localhost:8085](http://localhost:8085)** 觀察即時 Topic 與 Message。
+*   *備註：此方案預設將 Kafka 連線暴露在 `localhost:9092`。*
+
+#### 方案 B：使用 Kubernetes（進階、體驗本地 K8s 部署）
+若您想在本機 Mac 上體驗 Kubernetes 運作，可使用 Docker Desktop 內建的 K8s 跑起基礎設施：
+1. **開啟 Docker Desktop K8s**：點擊 Settings (齒輪) ➡️ Kubernetes ➡️ 勾選 **Enable Kubernetes** ➡️ Apply & restart。
+2. **安裝 Strimzi Kafka Operator (K8s 管理員)**：
+   ```bash
+   kubectl create -f 'https://strimzi.io/install/latest?namespace=default'
+   # 確保 strimzi-cluster-operator-xxx Pod 處於 Running 狀態後繼續
+   ```
+3. **一鍵部署 Postgres 與 Kafka 叢集 (KRaft 模式)**：
+   ```bash
+   # 部署資料庫與儲存卷 (PVC)
+   kubectl apply -f deploy/k8s/postgres.yaml
+   # 部署 1-Node KRaft Kafka 叢集與 Topics (自動映射 30094 & 30095 NodePort 外部端口)
+   kubectl apply -f deploy/k8s/kafka.yaml
+   # 觀察進度直到所有 Pod 皆為 Running / Ready 狀態
+   kubectl get pods -w
+   ```
+*   *備註：此方案預設將 Kafka 外部 Bootstrap 連線暴露在 `localhost:30094`。*
+
+---
 
 ### 3. 資料初始化與歷史補齊 (選填)
 若要清空測試數據，並自動補齊從原 Kaggle 最後更新日到昨天為止的歷史空缺：
@@ -244,18 +293,32 @@ python scripts/run_gap_filler.py --action reset
 python scripts/run_gap_filler.py --action gap-fill
 ```
 
-### 4. 執行即時串流管道
-請開啟兩個終端機視窗，分別啟動生產者與消費者：
+---
 
+### 4. 執行即時串流管道
+請開啟兩個終端機視窗，分別啟動生產者與消費者。
+
+> [!WARNING]
+> **切換方案注意事項**：當您在 **方案 A (Docker)** 與 **方案 B (K8s)** 之間切換時，請務必先執行 **`rm -rf spark_checkpoints`** 刪除舊的 Spark Offset 快取，避免因 Kafka 叢集重置導致 Offset 不一致而報錯。
+
+#### 如果您使用的是 方案 A (Docker Compose)
 *   **終端機 1 - 啟動 Kafka 實時模擬生產者**：
-    以每秒 1 筆的速度，持續將符合電商關聯性規則的即時行為/訂單發送至 Kafka：
     ```bash
     python scripts/run_kafka_producer.py --delay 1.0
     ```
 *   **終端機 2 - 啟動 Spark Structured Streaming 消費者**：
-    Spark 將即時訂閱 Kafka 的多個主題，並使用 BigQuery Storage Write API (Direct Mode) 強制 Commit 寫入 BigQuery raw 資料集：
     ```bash
     python scripts/spark_bigquery_consumer.py
+    ```
+
+#### 如果您使用的是 方案 B (Kubernetes)
+*   **終端機 1 - 啟動 Kafka 實時模擬生產者**：
+    ```bash
+    KAFKA_BOOTSTRAP_SERVERS="localhost:30094" python scripts/run_kafka_producer.py --delay 1.0
+    ```
+*   **終端機 2 - 啟動 Spark Structured Streaming 消費者**：
+    ```bash
+    KAFKA_BOOTSTRAP_SERVERS="localhost:30094" python scripts/spark_bigquery_consumer.py
     ```
 
 *(欲中止發送或消費，直接在各自的終端機按下 `Ctrl + C` 即可。)*
