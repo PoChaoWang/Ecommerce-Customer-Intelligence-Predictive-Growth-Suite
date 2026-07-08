@@ -215,6 +215,29 @@ To avoid incurring extra BigQuery query costs for monitoring, the notification s
 
 ---
 
+## Cloud Production Kubernetes Deployment Blueprint
+
+To demonstrate the cloud scalability of this architecture, this project provides a production-grade container orchestration blueprint based on **Google Kubernetes Engine (GKE)**. This configuration ensures high availability, auto-scaling, and fault tolerance for the data pipeline in the cloud, **without requiring any changes to the core Python application code**.
+
+All deployment configuration files are located under the project's [deploy/](ecommerce_dataset/deploy/) directory:
+
+### 1. Cloud Infrastructure (Terraform - IaC)
+Under [deploy/terraform/](ecommerce_dataset/deploy/terraform/), Terraform is used to declaratively define the cloud infrastructure:
+* **`gke.tf`**: Sets up a dedicated VPC network (with VPC-native routing) and provisions an auto-scaling GKE cluster (1 to 5 nodes). The nodes are configured with `e2-standard-2` machine type (2 vCPU, 8GB RAM) for production viability.
+* **`variables.tf` / `outputs.tf`**: Provides flexible parameterization and outputs the `kubectl` credentials command once GKE provisioning is complete.
+
+### 2. Container Orchestration (Kubernetes Manifests)
+Under [deploy/k8s/](ecommerce_dataset/deploy/k8s/), standard Kubernetes resources are declared for deploying services on the cluster:
+* **`postgres.yaml`**: Deploys the database backend with a `PersistentVolumeClaim (PVC)` requesting 10GB of persistent GCP cloud storage to prevent data loss.
+* **`kafka.yaml`**: Employs the official **Strimzi Kafka Operator** to easily spin up a 3-node high-availability ZooKeeper and Kafka cluster, automatically defining the `orders` and `behavior` topics.
+* **`airflow-values.yaml`**: Custom configuration for the official Apache Airflow Helm Chart. It configures the K8s-native **`KubernetesExecutor`** (spins up a separate pod for each task, maximizing resource utilization) and integrates **`git-sync`** (regularly pulls DAGs from GitHub to the scheduler/webserver, eliminating the need to rebuild Airflow docker images when DAGs change).
+* **`kafka-producer.yaml` / `spark-consumer.yaml`**: Deploys the Python simulation producer and PySpark streaming consumer as K8s Deployments. The consumer securely references a K8s Secret containing the GCP credentials key.
+
+> [!NOTE]
+> This folder serves as an architectural blueprint for reference. For local development and quick testing, we recommend using the free and lightweight Docker Compose setup.
+
+---
+
 ## Local Streaming Setup & Execution Guide
 
 This project supports a full real-time data streaming pipeline. Below are the steps to deploy and run it locally:
@@ -227,13 +250,39 @@ Activate your virtual environment and install the required Python packages:
 pip install -r requirements.txt
 ```
 
-### 2. Start Docker Containers (Kafka & Kafka UI)
+### 2. Start the Infrastructure Environment (Choose One)
+
+You can choose to spin up the services using either Docker Compose (lightweight) or Kubernetes (to test local K8s orchestrations).
+
+#### Option A: Using Docker Compose (Default & Lightweight)
 Ensure Docker Desktop is running locally, then execute:
 ```bash
 # Start Zookeeper, Kafka Broker, and Kafka UI
 docker compose up -d
 ```
 *   **Kafka UI Access**: Open your browser and navigate to **[http://localhost:8085](http://localhost:8085)** to monitor topics and messages in real-time.
+*   *Note: This option exposes Kafka on `localhost:9092`.*
+
+#### Option B: Using Kubernetes (Advanced & Local K8s Test Drive)
+If you want to experience running this stack in Kubernetes locally, you can enable the built-in K8s cluster in Docker Desktop:
+1. **Enable Docker Desktop K8s**: Go to Settings (gear icon) ➡️ Kubernetes ➡️ Check **Enable Kubernetes** ➡️ Click **Apply & restart**.
+2. **Install Strimzi Kafka Operator (K8s Administrator)**:
+   ```bash
+   kubectl create -f 'https://strimzi.io/install/latest?namespace=default'
+   # Ensure the strimzi-cluster-operator-xxx pod is in the Running state before proceeding
+   ```
+3. **One-Click Deploy Postgres & Kafka Cluster (KRaft Mode)**:
+   ```bash
+   # Deploy PostgreSQL and Persistent Volume Claim (PVC)
+   kubectl apply -f deploy/k8s/postgres.yaml
+   # Deploy 1-Node KRaft Kafka cluster and Topics (automatically mapped to NodePorts 30094 & 30095)
+   kubectl apply -f deploy/k8s/kafka.yaml
+   # Monitor progress until all Pods are in Running / Ready (1/1) status
+   kubectl get pods -w
+   ```
+*   *Note: This option exposes Kafka's external bootstrap connection on `localhost:30094`.*
+
+---
 
 ### 3. Initialize & Fill History Gap (Optional)
 To reset the local dataset and automatically fill the gap between the last Kaggle update date and yesterday:
@@ -245,18 +294,32 @@ python scripts/run_gap_filler.py --action reset
 python scripts/run_gap_filler.py --action gap-fill
 ```
 
-### 4. Run the Real-Time Pipeline
-Open two separate terminal windows or tabs to run the Producer and Consumer concurrently:
+---
 
+### 4. Run the Real-Time Pipeline
+Open two separate terminal windows or tabs to run the Producer and Consumer concurrently.
+
+> [!WARNING]
+> **Important Switch Precaution**: When switching between **Option A (Docker Compose)** and **Option B (Kubernetes)**, you must first run **`rm -rf spark_checkpoints`** to clear the old Spark checkpoint directory. Otherwise, the Spark job will fail due to offset mismatches from the different Kafka clusters.
+
+#### If you are using Option A (Docker Compose)
 *   **Terminal 1 - Start the Kafka Producer**:
-    Streams simulated stateful e-commerce events and orders into Kafka at a specified interval (e.g., 1 message per second):
     ```bash
     python scripts/run_kafka_producer.py --delay 1.0
     ```
 *   **Terminal 2 - Start the Spark Structured Streaming Consumer**:
-    Subscribes to all Kafka topics and writes streaming batches directly to BigQuery raw tables using the Storage Write API (Direct Mode):
     ```bash
     python scripts/spark_bigquery_consumer.py
+    ```
+
+#### If you are using Option B (Kubernetes)
+*   **Terminal 1 - Start the Kafka Producer**:
+    ```bash
+    KAFKA_BOOTSTRAP_SERVERS="localhost:30094" python scripts/run_kafka_producer.py --delay 1.0
+    ```
+*   **Terminal 2 - Start the Spark Structured Streaming Consumer**:
+    ```bash
+    KAFKA_BOOTSTRAP_SERVERS="localhost:30094" python scripts/spark_bigquery_consumer.py
     ```
 
 *(Press `Ctrl + C` in either terminal to stop execution.)*
