@@ -15,15 +15,18 @@ def start_streaming(generator, bootstrap_servers, delay):
     # Dynamic JSON serializer selection for optimal performance
     try:
         import orjson
-        serializer = lambda v: orjson.dumps(v)
+        def serializer(v):
+            return orjson.dumps(v)
         logger.info("⚡ Using 'orjson' for ultra-fast serialization.")
     except ImportError:
         try:
             import ujson
-            serializer = lambda v: ujson.dumps(v).encode("utf-8")
+            def serializer(v):
+                return ujson.dumps(v).encode("utf-8")
             logger.info("⚡ Using 'ujson' for fast serialization.")
         except ImportError:
-            serializer = lambda v: json.dumps(v).encode("utf-8")
+            def serializer(v):
+                return json.dumps(v).encode("utf-8")
             logger.info("ℹ️ Using standard 'json' for serialization. (Install 'orjson' for faster speed)")
 
     logger.info(f"🔌 Connecting to Kafka broker at {bootstrap_servers}...")
