@@ -11,6 +11,7 @@ A full-stack data project integrating **Data Engineering**, **Data Analytics**, 
 ## 🚀 Key Highlights & Engineering Metrics
 
 * **Business-Value Driven**: Integrates RFM modeling with BigQuery ML predicted Customer Lifetime Value (LTV) to automatically generate Customer 360 profiles (C360) and high-priority CRM action recommendations.
+* **High-Throughput Real-time Ingestion**: Supports real-time data streaming at **500 ~ 2,000+ EPS** (Events Per Second), processing approximately **43M ~ 170M+ records daily**, demonstrating the pipeline's stability and horizontal scalability under high-concurrency scenarios.
 * **Enterprise CI/CD & Slim CI**: Employs GitHub Actions and GCP Workload Identity Federation (keyless authentication) combined with Slim CI to run tests only on modified dbt models, **reducing BigQuery node compute costs by over 90%**.
 * **Zero-Query-Cost Monitoring**: Apache Airflow schedules daily runs and parses local `run_results.json` to generate execution reports and instant Slack/Email alerts, **without executing any extra queries on BigQuery**.
 * **Security & Privacy Compliance (PII Protection)**: Sensitive email addresses are completely stripped in the Staging layer and standard SHA-256 hashed for irreversible masking, with fine-grained IAM dataset-level (Raw/Staging/Marts) access control managed via Terraform.
