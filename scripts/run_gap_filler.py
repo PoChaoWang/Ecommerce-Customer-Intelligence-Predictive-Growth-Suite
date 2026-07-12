@@ -387,7 +387,7 @@ def fill_gap(generator):
         target_event_count = random.randint(43000000, 173000000)
         avg_actions = random.randint(40, 80)
         active_users_count = target_event_count // avg_actions
-        
+
         # Keep active_users_count in 500,000 to 1,500,000 range
         if active_users_count < 500000:
             active_users_count = 500000
@@ -395,7 +395,7 @@ def fill_gap(generator):
         elif active_users_count > 1500000:
             active_users_count = 1500000
             avg_actions = target_event_count // active_users_count
-            
+
         event_count = active_users_count * avg_actions
 
         # 1. Users: new signups (10,000 to 30,000 daily)
@@ -416,7 +416,9 @@ def fill_gap(generator):
         # Cold start/population: ensure we have enough users in the pool to select active users
         if len(generator.active_users) < active_users_count:
             missing_users_count = active_users_count - len(generator.active_users)
-            print(f"  Populating {missing_users_count} pre-existing users to meet active user pool size...")
+            print(
+                f"  Populating {missing_users_count} pre-existing users to meet active user pool size..."
+            )
             for _ in range(missing_users_count):
                 user = generator.generate_user(date_str)
                 w_users.writerow(
@@ -431,74 +433,86 @@ def fill_gap(generator):
                 )
 
         # 2. Events: 43M to 173M events
-        print(f"  Generating {event_count} events for {active_users_count} active users...")
+        print(
+            f"  Generating {event_count} events for {active_users_count} active users..."
+        )
         active_day_users = random.sample(generator.active_users, active_users_count)
-        
+
         product_ids = [p["product_id"] for p in generator.products]
         event_types = ["view", "cart"]
         event_type_weights = [0.80, 0.20]
-        
+
         chunk_size = 1000000
         num_chunks = (event_count + chunk_size - 1) // chunk_size
-        
+
         for chunk_idx in range(num_chunks):
             current_chunk_size = min(chunk_size, event_count - chunk_idx * chunk_size)
-            
+
             chunk_users = random.choices(active_day_users, k=current_chunk_size)
             chunk_products = random.choices(product_ids, k=current_chunk_size)
-            chunk_types = random.choices(event_types, weights=event_type_weights, k=current_chunk_size)
-            
+            chunk_types = random.choices(
+                event_types, weights=event_type_weights, k=current_chunk_size
+            )
+
             rows = []
             for i in range(current_chunk_size):
                 generator.max_event_idx += 1
                 event_id = f"E{generator.max_event_idx:08d}"
-                
+
                 rand_sec = random.randint(0, 86399)
                 rand_micro = random.randint(0, 999999)
-                timestamp_str = f"{date_str}T{rand_sec//3600:02d}:{(rand_sec%3600)//60:02d}:{rand_sec%60:02d}.{rand_micro:06d}"
-                
-                rows.append([
-                    event_id,
-                    chunk_users[i],
-                    chunk_products[i],
-                    chunk_types[i],
-                    timestamp_str
-                ])
+                timestamp_str = f"{date_str}T{rand_sec // 3600:02d}:{(rand_sec % 3600) // 60:02d}:{rand_sec % 60:02d}.{rand_micro:06d}"
+
+                rows.append(
+                    [
+                        event_id,
+                        chunk_users[i],
+                        chunk_products[i],
+                        chunk_types[i],
+                        timestamp_str,
+                    ]
+                )
             w_events.writerows(rows)
 
         # 3. Orders & Order Items: 10,000 to 50,000 orders
         order_count = int(active_users_count * random.uniform(0.01, 0.03))
         order_count = max(10000, min(50000, order_count))
         print(f"  Generating {order_count} orders...")
-        
+
         orders_rows = []
         items_rows = []
         for _ in range(order_count):
             user_id = random.choice(active_day_users)
             rand_sec = random.randint(0, 86399)
             rand_micro = random.randint(0, 999999)
-            timestamp_str = f"{date_str}T{rand_sec//3600:02d}:{(rand_sec%3600)//60:02d}:{rand_sec%60:02d}.{rand_micro:06d}"
-            
+            timestamp_str = f"{date_str}T{rand_sec // 3600:02d}:{(rand_sec % 3600) // 60:02d}:{rand_sec % 60:02d}.{rand_micro:06d}"
+
             order, items = generator.generate_order_and_items(user_id, timestamp_str)
-            orders_rows.append([
-                order["order_id"],
-                order["user_id"],
-                order["order_date"],
-                order["order_status"],
-                order["total_amount"],
-            ])
+            orders_rows.append(
+                [
+                    order["order_id"],
+                    order["user_id"],
+                    order["order_date"],
+                    order["order_status"],
+                    order["total_amount"],
+                ]
+            )
             for item in items:
-                items_rows.append([
-                    item["order_item_id"],
-                    item["order_id"],
-                    item["product_id"],
-                    item["user_id"],
-                    item["quantity"],
-                    item["item_price"],
-                    item["item_total"],
-                ])
-                
-                order_datetime = datetime.combine(current_date, datetime.min.time()) + timedelta(seconds=rand_sec, microseconds=rand_micro)
+                items_rows.append(
+                    [
+                        item["order_item_id"],
+                        item["order_id"],
+                        item["product_id"],
+                        item["user_id"],
+                        item["quantity"],
+                        item["item_price"],
+                        item["item_total"],
+                    ]
+                )
+
+                order_datetime = datetime.combine(
+                    current_date, datetime.min.time()
+                ) + timedelta(seconds=rand_sec, microseconds=rand_micro)
                 gap_purchased.append(
                     {
                         "user_id": item["user_id"],
@@ -531,17 +545,19 @@ def fill_gap(generator):
                     review_dt = datetime.combine(yesterday, datetime.max.time())
 
                 review = generator.generate_review(purchase, review_dt.isoformat())
-                reviews_rows.append([
-                    review["review_id"],
-                    review["order_id"],
-                    review["product_id"],
-                    review["user_id"],
-                    review["rating"],
-                    review["review_text"],
-                    review["review_date"],
-                ])
+                reviews_rows.append(
+                    [
+                        review["review_id"],
+                        review["order_id"],
+                        review["product_id"],
+                        review["user_id"],
+                        review["rating"],
+                        review["review_text"],
+                        review["review_date"],
+                    ]
+                )
             w_reviews.writerows(reviews_rows)
-            
+
             # Efficiently remove selected reviews from gap_purchased
             to_review_set = set(id(p) for p in to_review)
             gap_purchased = [p for p in gap_purchased if id(p) not in to_review_set]
