@@ -157,14 +157,19 @@
    python scripts/run_gap_filler.py --action gap-fill
    ```
 3. **執行即時串流管道** (請開啟兩個終端機視窗執行):
-   * **終端機 1 (模擬數據生產者)**:
-     ```bash
-     python scripts/run_kafka_producer.py --delay 1.0
-     ```
-   * **終端機 2 (PySpark 串流消費者，寫入 BigQuery)**:
-     ```bash
-     python scripts/spark_bigquery_consumer.py
-     ```
+    * **終端機 1 (模擬數據生產者)**:
+      預設會以 `INFO` 日誌級別啟動，每 5 秒輸出一次發送統計數據（優化發送效能）：
+      ```bash
+      python scripts/run_kafka_producer.py --delay 1.0
+      ```
+      如果您希望即時查看每一筆產生的資料細節（如使用者註冊、瀏覽、下單、評論），可以使用 `DEBUG` 模式啟動：
+      ```bash
+      python scripts/run_kafka_producer.py --log-level DEBUG --delay 1.0
+      ```
+    * **終端機 2 (PySpark 串流消費者，寫入 BigQuery)**:
+      ```bash
+      python scripts/spark_bigquery_consumer.py
+      ```
 
 ### 方案 B：使用 Kubernetes (本地 K8s 部署)
 

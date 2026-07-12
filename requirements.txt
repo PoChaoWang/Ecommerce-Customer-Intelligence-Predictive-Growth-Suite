@@ -35,6 +35,8 @@ Jinja2>=3.1.2
 Faker>=19.0.0
 kafka-python-ng>=2.2.2
 pyspark==3.5.1
+orjson>=3.10.0
+ujson>=5.9.0
 
 # Airflow & Orchestration
 apache-airflow>=2.10.0
