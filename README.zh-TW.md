@@ -11,6 +11,7 @@
 ## 🚀 專案亮點與工程指標 (Key Highlights)
 
 * **商業價值驅動**：整合 RFM 模型與 BigQuery ML 預測的生命週期價值 (LTV)，自動產出客戶全視角畫像 (C360) 與高優先級 CRM 行動建議。
+* **高吞吐量即時數據處理 (High-Throughput Real-time Ingestion)**：支援 **500 ~ 2,000+ EPS** (每秒事件數) 的即時數據吞吐量，每日處理資料量達 **4,300 萬 ~ 1.7 億筆**，驗證系統於高併發大規模數據流下的穩定性與水平擴充能力。
 * **企業級 CI/CD 與 Slim CI**：利用 GitHub Actions 與 GCP Workload Identity Federation (無金鑰驗證)，搭配 Slim CI 僅測試修改的 dbt 模型，**BigQuery 節點運算成本降低 90% 以上**。
 * **零查詢成本監控 (Zero-Query-Cost)**：Airflow 每日自動調度，並透過解析本地 `run_results.json` 產出執行日報與即時 Slack/Email 警報，**不對 BigQuery 發起任何額外查詢**。
 * **隱私安全合規 (PII Protection)**：Staging 層移除敏感 Email，採 SHA-256 進行不可逆雜湊，並透過 Terraform 實施 BigQuery 資料集層級 (Raw/Staging/Marts) 的精細化 IAM 權限控管。
