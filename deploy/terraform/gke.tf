@@ -58,35 +58,86 @@ resource "google_container_cluster" "primary" {
   }
 }
 
-# 4. 宣告實體工作節點池 (GKE Node Pool)
-resource "google_container_node_pool" "primary_nodes" {
-  name       = "ecommerce-node-pool"
+# 4. 宣告通用管理節點池 (Airflow, dbt, Dashboard)
+resource "google_container_node_pool" "general_nodes" {
+  name       = "ecommerce-general-pool"
   location   = var.region
   cluster    = google_container_cluster.primary.name
-  node_count = var.node_count
-
-  # 自動縮放設定 (如果任務變多，自動擴展節點數)
-  autoscaling {
-    min_node_count = 1
-    max_node_count = 5
-  }
+  node_count = 2
 
   node_config {
-    preemptible  = false # 生產環境不建議用搶占式 VM，以確保 Kafka/Airflow 穩定度
-    machine_type = var.machine_type
+    preemptible  = false # 管理伺服器保持穩定，不使用搶占式
+    machine_type = "e2-standard-4" # 4 vCPU, 16GB RAM，執行 Airflow 基礎組件
 
-    # 綁定權限最低的 Service Account，遵循最小權限原則
     service_account = var.gke_service_account
-
-    # 節點的 OAuth 權限範圍
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
     ]
 
     labels = {
       environment = "production"
+      workload    = "general"
     }
 
-    tags = ["gke-node", "ecommerce-data-pipeline"]
+    tags = ["gke-node", "ecommerce-general-workload"]
+  }
+}
+
+# 5. 宣告 Kafka 專用節點池 (大記憶體、持久化 SSD，固定 3 節點作高可用)
+resource "google_container_node_pool" "kafka_nodes" {
+  name       = "ecommerce-kafka-pool"
+  location   = var.region
+  cluster    = google_container_cluster.primary.name
+  node_count = 3 # Kafka Cluster 需要最少 3 台 Broker 節點作副本冗餘
+
+  node_config {
+    preemptible  = false # 儲存節點不能突然被中斷
+    machine_type = "n2-highmem-4" # 4 vCPU, 32GB RAM，提供大量作業系統 Page Cache 快取
+
+    # 高速 SSD 持久化儲存
+    disk_type    = "pd-ssd"
+    disk_size_gb = 100
+
+    service_account = var.gke_service_account
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+
+    labels = {
+      environment = "production"
+      workload    = "kafka"
+    }
+
+    tags = ["gke-node", "kafka-broker"]
+  }
+}
+
+# 6. 宣告 Spark 專用節點池 (運算優化、自動縮放、搶占式 Spot 以節省 80% 成本)
+resource "google_container_node_pool" "spark_nodes" {
+  name     = "ecommerce-spark-pool"
+  location = var.region
+  cluster  = google_container_cluster.primary.name
+
+  # 動態自動橫向擴充，夜間尖峰流量大時自動加入節點，離峰時自動釋放
+  autoscaling {
+    min_node_count = 1
+    max_node_count = 10
+  }
+
+  node_config {
+    spot         = true  # 關鍵：開啟 Spot VM 搶占式虛擬機，大幅省去 70%~80% 雲端成本
+    machine_type = "c2-standard-8" # 8 vCPU, 32GB RAM，高運算密集型 CPU
+
+    service_account = var.gke_service_account
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+
+    labels = {
+      environment = "production"
+      workload    = "spark"
+    }
+
+    tags = ["gke-node", "spark-executor"]
   }
 }
