@@ -5,6 +5,7 @@ venv_dbt/
 __pycache__/
 *.py[cod]
 *$py.class
+tests
 
 # macOS
 .DS_Store

@@ -158,8 +158,13 @@ This project supports two local infrastructure setups:
    ```
 3. **Run the Streaming Pipeline** (Open two terminal windows/tabs):
    * **Terminal 1 (Mock Data Producer)**:
+     By default, it runs at the `INFO` log level, which prints status summaries every 5 seconds (optimized for high speed):
      ```bash
      python scripts/run_kafka_producer.py --delay 1.0
+     ```
+     If you want to view every single generated event (user signup, event, order, review) in real-time, run in `DEBUG` mode:
+     ```bash
+     python scripts/run_kafka_producer.py --log-level DEBUG --delay 1.0
      ```
    * **Terminal 2 (PySpark Streaming Consumer, writes to BigQuery)**:
      ```bash

@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 from dotenv import load_dotenv
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, from_json
@@ -11,6 +12,8 @@ from pyspark.sql.types import (
     IntegerType,
 )
 
+logger = logging.getLogger(__name__)
+
 # Load environment variables
 load_dotenv()
 
@@ -19,9 +22,7 @@ PROJECT_ID = os.getenv("PROJECT_ID")
 DATASET_ID = os.getenv("DATASET_ID")
 
 if not all([SERVICE_ACCOUNT_JSON, PROJECT_ID, DATASET_ID]):
-    print(
-        "❌ Error: Missing configuration in .env file (SERVICE_ACCOUNT_JSON, PROJECT_ID, DATASET_ID)."
-    )
+    print("❌ Error: Missing configuration in .env file (SERVICE_ACCOUNT_JSON, PROJECT_ID, DATASET_ID).")
     sys.exit(1)
 
 # Convert service account path to absolute path
@@ -98,7 +99,14 @@ reviews_schema = StructType(
 
 
 def main():
-    print("🚀 Initializing Spark Session...")
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%H:%M:%S"
+    )
+
+    logger.info("🚀 Initializing Spark Session...")
 
     # We specify the Spark Kafka & BigQuery Connector dependencies.
     # PySpark will download these JARs automatically.
@@ -114,21 +122,19 @@ def main():
     )
 
     spark.sparkContext.setLogLevel("WARN")
-    print("✅ Spark Session initialized successfully.")
+    logger.info("✅ Spark Session initialized successfully.")
 
     # Read from Kafka multi-topic stream
     kafka_bootstrap_servers = os.environ.get(
         "KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"
     )
-    print(f"🔌 Connecting to Kafka broker at {kafka_bootstrap_servers}...")
+    logger.info(f"🔌 Connecting to Kafka broker at {kafka_bootstrap_servers}...")
     kafka_stream = (
         spark.readStream.format("kafka")
         .option("kafka.bootstrap.servers", kafka_bootstrap_servers)
         .option("subscribe", "db_users,db_events,db_orders,db_order_items,db_reviews")
         .option("startingOffsets", "latest")
-        .option(
-            "failOnDataLoss", "false"
-        )  # 避免因 Kafka 重建或舊快取導致 Offset 找不到而崩潰
+        .option("failOnDataLoss", "false")  # Avoid crash on offset loss
         .load()
     )
 
@@ -137,79 +143,65 @@ def main():
 
     # Define mapping of topics to schema and destination BQ table names
     topics_config = {
-        "db_users": {
-            "schema": users_schema,
-            "table": "raw_users",
-            "checkpoint": "users",
-        },
-        "db_events": {
-            "schema": events_schema,
-            "table": "raw_events",
-            "checkpoint": "events",
-        },
-        "db_orders": {
-            "schema": orders_schema,
-            "table": "raw_orders",
-            "checkpoint": "orders",
-        },
-        "db_order_items": {
-            "schema": order_items_schema,
-            "table": "raw_order_items",
-            "checkpoint": "order_items",
-        },
-        "db_reviews": {
-            "schema": reviews_schema,
-            "table": "raw_reviews",
-            "checkpoint": "reviews",
-        },
+        "db_users": {"schema": users_schema, "table": "raw_users"},
+        "db_events": {"schema": events_schema, "table": "raw_events"},
+        "db_orders": {"schema": orders_schema, "table": "raw_orders"},
+        "db_order_items": {"schema": order_items_schema, "table": "raw_order_items"},
+        "db_reviews": {"schema": reviews_schema, "table": "raw_reviews"},
     }
 
-    queries = []
+    # Combined writer that writes all topics within a single micro-batch to BigQuery
+    def write_all_to_bq(batch_df, batch_id):
+        # Cache the batch DataFrame in memory to avoid reading from Kafka multiple times
+        batch_df.persist()
+        
+        write_details = []
+        
+        for topic_name, cfg in topics_config.items():
+            topic_df = (
+                batch_df.filter(col("topic") == topic_name)
+                .select(from_json(col("json_str"), cfg["schema"]).alias("data"))
+                .select("data.*")
+            )
+            
+            # Only write if there is data for this topic in the current batch
+            count = topic_df.count()
+            if count > 0:
+                dest_table = f"{PROJECT_ID}.{DATASET_ID}.{cfg['table']}"
+                topic_df.write.format("bigquery").option("table", dest_table).option(
+                    "writeMethod", "direct"
+                ).mode("append").save()
+                write_details.append(f"{topic_name}: {count:,} rows")
+                
+        if write_details:
+            logger.info(f"⚡ Combined Batch {batch_id} written to BigQuery | {', '.join(write_details)}")
+            
+        # Free memory cache
+        batch_df.unpersist()
 
-    def make_writer(table_name):
-        def write_to_bq(batch_df, batch_id):
-            batch_df.write.format("bigquery").option("table", table_name).option(
-                "writeMethod", "direct"
-            ).mode("append").save()
+    checkpoint_path = os.path.join(CHECKPOINT_DIR, "combined")
 
-        return write_to_bq
+    logger.info("📡 Setting up combined stream: Kafka ➔ BigQuery")
 
-    # Loop to launch structured streaming query for each topic
-    for topic_name, cfg in topics_config.items():
-        dest_table = f"{PROJECT_ID}.{DATASET_ID}.{cfg['table']}"
-        checkpoint_path = os.path.join(CHECKPOINT_DIR, cfg["checkpoint"])
-
-        print(f"📡 Setting up stream: Kafka '{topic_name}' ➔ BigQuery '{dest_table}'")
-
-        # Filter by topic, parse JSON value, select fields
-        parsed_df = (
-            records_str.filter(col("topic") == topic_name)
-            .select(from_json(col("json_str"), cfg["schema"]).alias("data"))
-            .select("data.*")
-        )
-
-        # Start the query and write to BigQuery using foreachBatch
-        query = (
-            parsed_df.writeStream.foreachBatch(make_writer(dest_table))
-            .option("checkpointLocation", checkpoint_path)
-            .start()
-        )
-
-        queries.append(query)
-
-    print(
-        f"🎉 Started {len(queries)} streaming queries. Writing directly to BigQuery raw tables..."
+    # Start the single combined query and write to BigQuery
+    query = (
+        records_str.writeStream
+        .foreachBatch(write_all_to_bq)
+        .option("checkpointLocation", checkpoint_path)
+        .option("maxOffsetsPerTrigger", 150000) # Safety limit for peak loads
+        .trigger(processingTime="5 seconds")    # Pack micro-batches to reduce BQ API calls
+        .start()
     )
-    print("Press Ctrl+C in your terminal to stop.")
 
-    # Wait for termination of all queries
+    logger.info("🎉 Started streaming query. Writing directly to BigQuery raw tables...")
+    logger.info("Press Ctrl+C in your terminal to stop.")
+
+    # Wait for termination of the query
     try:
-        for query in queries:
-            query.awaitTermination()
+        query.awaitTermination()
     except KeyboardInterrupt:
-        print("\n👋 Spark Streaming job stopped by user.")
-        for query in queries:
-            query.stop()
+        logger.info("👋 Spark Streaming job stopped by user.")
+        query.stop()
 
 
 if __name__ == "__main__":
